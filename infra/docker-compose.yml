@@ -1,0 +1,106 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    ports:
+      - "9092:9092"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../infra/docker/backend.Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    volumes:
+      - ./backend:/app
+      - /app/target
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../infra/docker/frontend.Dockerfile
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+  kyc-service:
+    build:
+      context: ./ai-services/kyc-verification-service
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8003"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+
+  chatbot-service:
+    build:
+      context: ./ai-services/chatbot-service
+      dockerfile: Dockerfile
+    ports:
+      - "8004:8004"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+
+  recommendation-service:
+    build:
+      context: ./ai-services/recommendation-service
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8005"
+
+  routing-engine-service:
+    build:
+      context: ./ai-services/routing-engine-service
+      dockerfile: Dockerfile
+    ports:
+      - "8006:8006"
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  postgres_data:
+  ollama_data:
