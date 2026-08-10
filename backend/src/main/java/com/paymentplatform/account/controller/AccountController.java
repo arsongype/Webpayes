@@ -1,8 +1,6 @@
 package com.paymentplatform.account.controller;
 
 import com.paymentplatform.account.dto.AccountDTO;
-import com.paymentplatform.account.dto.AccountRequestDTO;
-import com.paymentplatform.account.entity.Account;
 import com.paymentplatform.account.service.AccountService;
 import com.paymentplatform.security.CurrentUserService;
 import jakarta.validation.Valid;
@@ -57,16 +55,5 @@ public class AccountController {
         boolean isAdmin = currentUserService.isCurrentUserAdmin();
         accountService.deleteAccount(id, currentUserId, isAdmin);
         return ResponseEntity.noContent().build();
-    }
-
-    private AccountDTO toDto(Account a) {
-        return AccountDTO.builder()
-                .id(a.getId())
-                .userId(a.getUser() != null ? a.getUser().getId() : null)
-                .accountNumber(a.getAccountNumber())
-                .balance(a.getBalance())
-                .currency(a.getCurrency())
-                .createdAt(a.getCreatedAt())
-                .build();
     }
 }

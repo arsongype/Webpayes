@@ -23,7 +23,7 @@ export const TransactionStatus = {
 export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
 
 export interface TransferRequest {
-  senderAccountId: string;
+  senderAccountId?: string;
   receiverAccountId: string;
   amount: string;
   description?: string;

@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any
 
-from app.schemas.kyc_schema import KycStatus, KycVerificationRequest, KycVerificationResponse
+from app.schemas.kyc_schema import KycStatus, KycStatusUpdate, KycVerificationRequest, KycVerificationResponse, AccountVerificationRequest, AccountVerificationResponse
 
 class KycService:
     def __init__(self):
@@ -82,5 +82,22 @@ class KycService:
         verification.rejection_reason = update.rejection_reason
         verification.updated_at = datetime.utcnow().isoformat() + "Z"
         return verification
+
+    def verify_account(self, request: "AccountVerificationRequest") -> "AccountVerificationResponse":
+        verification = self.create_verification(KycVerificationRequest(
+            user_id=request.user_id,
+            id_document_image=request.id_document_image,
+            full_name=request.full_name,
+            date_of_birth=request.date_of_birth or "2000-01-01",
+            nationality=request.nationality or "MG",
+        ))
+        return AccountVerificationResponse(
+            user_id=verification.user_id,
+            account_number=request.account_number,
+            status=verification.status,
+            verified=verification.status == KycStatus.VALIDATED,
+            confidence_score=verification.confidence_score,
+            rejection_reason=verification.rejection_reason,
+        )
 
 kyc_service = KycService()

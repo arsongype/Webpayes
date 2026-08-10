@@ -12,7 +12,8 @@ public record AuthResponseDTO(
             String firstName,
             String lastName,
             String email,
-            String role
+            String role,
+            String accountNumber
     ) {
     }
 }

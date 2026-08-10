@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risk-scoring
+  namespace: payment-platform
+  labels:
+    app: risk-scoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: risk-scoring
+  template:
+    metadata:
+      labels:
+        app: risk-scoring
+    spec:
+      containers:
+        - name: risk-scoring
+          image: payment-online/risk-scoring:1.0.0
+          ports:
+            - containerPort: 8002
+          env:
+            - name: PORT
+              value: "8002"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: risk-scoring
+  namespace: payment-platform
+  labels:
+    app: risk-scoring
+spec:
+  selector:
+    app: risk-scoring
+  ports:
+    - port: 8002
+      targetPort: 8002
+  type: ClusterIP

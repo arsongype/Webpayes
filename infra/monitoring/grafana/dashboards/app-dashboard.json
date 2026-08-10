@@ -1,0 +1,68 @@
+{
+  "title": "Payment Online - Application Overview",
+  "uid": "payment-online-app",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "30s",
+  "tags": ["payment-online"],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Backend Up (HTTP /actuator/health)",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "up{job=\"backend\"}",
+          "legendFormat": "backend"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "AI Services Up",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "targets": [
+        { "expr": "up{job=\"fraud-detection\"}", "legendFormat": "fraud-detection" },
+        { "expr": "up{job=\"risk-scoring\"}", "legendFormat": "risk-scoring" },
+        { "expr": "up{job=\"kyc-verification\"}", "legendFormat": "kyc-verification" },
+        { "expr": "up{job=\"chatbot\"}", "legendFormat": "chatbot" },
+        { "expr": "up{job=\"recommendation\"}", "legendFormat": "recommendation" },
+        { "expr": "up{job=\"routing-engine\"}", "legendFormat": "routing-engine" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Backend JVM Memory Used (bytes)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{job=\"backend\", area=\"heap\"}",
+          "legendFormat": "{{instance}} heap"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Backend HTTP Requests (per second)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{job=\"backend\"}[5m])",
+          "legendFormat": "{{status}} {{uri}}"
+        }
+      ]
+    }
+  ]
+}

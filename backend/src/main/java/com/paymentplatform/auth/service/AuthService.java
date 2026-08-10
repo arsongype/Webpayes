@@ -11,6 +11,7 @@ import com.paymentplatform.user.repository.UserRepository;
 import com.paymentplatform.account.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final AccountService accountService;
+    private final com.paymentplatform.account.repository.AccountRepository accountRepository;
 
     @Transactional
     public AuthResponseDTO register(RegisterRequestDTO request) {
@@ -34,22 +36,34 @@ public class AuthService {
             throw new BusinessException("Un compte existe déjà avec cet email", HttpStatus.CONFLICT);
         }
 
+        Role role = Role.USER;
+        if (request.role() != null) {
+            try {
+                role = Role.valueOf(request.role().trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                role = Role.USER;
+            }
+        }
+
         User user = User.builder()
                 .firstName(request.firstName())
                 .lastName(request.lastName())
                 .email(request.email().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.password()))
-                .role(Role.USER)
+                .role(role)
                 .enabled(true)
                 .build();
 
-        userRepository.save(user);
-        // create default account for new user
-        try {
-            accountService.createAccount(new com.paymentplatform.account.dto.AccountRequestDTO(null, null, null, null), user.getId(), false);
-        } catch (Exception ignored) {
-            // account creation is best-effort here; if it fails, continue with auth
-        }
+        user = userRepository.save(user);
+
+        // Every registered user must own an account so they can pay, deposit,
+        // withdraw and transact. Account creation is part of registration and
+        // failures must not be silently ignored.
+        accountService.createAccount(
+                new com.paymentplatform.account.dto.AccountRequestDTO(null, null, null, null),
+                user.getId(),
+                false
+        );
 
         Authentication authentication = authenticate(request.email(), request.password());
         String token = jwtTokenProvider.generateToken(authentication);
@@ -73,7 +87,10 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(email.toLowerCase(), password));
     }
 
-    private AuthResponseDTO toAuthResponse(String token, User user) {
+    private AuthResponseDTO toAuthResponse(String token, @NonNull User user) {
+        String accountNumber = accountRepository.findByUserId(user.getId())
+                .map(com.paymentplatform.account.entity.Account::getAccountNumber)
+                .orElse(null);
         return new AuthResponseDTO(
                 token,
                 "Bearer",
@@ -82,7 +99,8 @@ public class AuthService {
                         user.getFirstName(),
                         user.getLastName(),
                         user.getEmail(),
-                        user.getRole().name()
+                        user.getRole().name(),
+                        accountNumber
                 )
         );
     }

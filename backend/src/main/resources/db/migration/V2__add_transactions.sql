@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sender_account_id UUID NOT NULL REFERENCES accounts(id),
-    receiver_account_id UUID NOT NULL REFERENCES accounts(id),
+    receiver_account_id UUID REFERENCES accounts(id),
     amount NUMERIC(19,4) NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'MGA',
     status VARCHAR(20) NOT NULL DEFAULT 'PENDING',

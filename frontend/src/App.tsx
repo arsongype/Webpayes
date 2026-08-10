@@ -8,6 +8,7 @@ import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import NavbarMobile from './components/layout/NavbarMobile';
 import Footer from './components/layout/Footer';
+import NotificationLoader from './pages/Notification/NotificationLoader';
 import { store } from './store/store';
 import { useAuth } from './hooks/useAuth';
 
@@ -15,10 +16,10 @@ function AppContent() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
+    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
       <Navbar />
       
-      <div className="flex pt-16">
+      <div className="flex flex-1 pt-16">
         {/* Desktop Sidebar */}
         {isAuthenticated && <Sidebar />}
         

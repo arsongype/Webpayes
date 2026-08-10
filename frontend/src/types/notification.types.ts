@@ -12,3 +12,13 @@ export interface SmsRequest {
   phoneNumber: string;
   message: string;
 }
+
+export interface NotificationDTO {
+  id: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  type: string;
+  status: string;
+  createdAt?: string;
+}

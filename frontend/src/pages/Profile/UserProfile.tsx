@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Mail, LogOut, Camera, Trash2, ShieldCheck, Lightbulb, Route } from 'lucide-react';
+import { Mail, Camera, Trash2, ShieldCheck, Lightbulb, Route } from 'lucide-react';
 import userService from '../../services/userService';
 import aiService from '../../services/aiService';
 import type { RecommendationResponse } from '../../types/recommendation.types';
@@ -36,7 +36,7 @@ const resizeImage = (file: File, maxSize = 256): Promise<string> => {
 };
 
 const UserProfile = () => {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState(user?.email ?? '');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -125,13 +125,14 @@ const UserProfile = () => {
 
         {message && (
           <div
-            className={`mb-6 rounded-2xl border px-4 py-3 text-sm`}
+            className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${
+              message.type === 'success'
+                ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-200'
+                : 'border-rose-400/30 bg-rose-500/10 text-rose-600 dark:text-rose-200'
+            }`}
             role="alert"
             aria-live="assertive"
           >
-            {message.type === 'success'
-              ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-200'
-              : 'border-rose-400/30 bg-rose-500/10 text-rose-600 dark:text-rose-200'}
             {message.text}
           </div>
         )}
@@ -265,13 +266,7 @@ const UserProfile = () => {
             Vérification KYC
           </button>
 
-          <button
-            onClick={logout}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700 sm:w-auto"
-          >
-            <LogOut size={18} aria-hidden="true" />
-            Déconnexion
-          </button>
+          
         </div>
       </div>
 

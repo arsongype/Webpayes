@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+  namespace: payment-platform
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+    spec:
+      containers:
+        - name: recommendation
+          image: payment-online/recommendation:1.0.0
+          ports:
+            - containerPort: 8005
+          env:
+            - name: PORT
+              value: "8005"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation
+  namespace: payment-platform
+  labels:
+    app: recommendation
+spec:
+  selector:
+    app: recommendation
+  ports:
+    - port: 8005
+      targetPort: 8005
+  type: ClusterIP

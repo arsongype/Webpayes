@@ -27,3 +27,21 @@ class KycVerificationResponse(BaseModel):
 class KycStatusUpdate(BaseModel):
     status: KycStatus
     rejection_reason: Optional[str] = None
+
+
+class AccountVerificationRequest(BaseModel):
+    user_id: str
+    account_number: str
+    full_name: str = Field(min_length=2, max_length=100)
+    date_of_birth: Optional[str] = None
+    nationality: Optional[str] = None
+    id_document_image: Optional[str] = None
+
+
+class AccountVerificationResponse(BaseModel):
+    user_id: str
+    account_number: str
+    status: KycStatus
+    verified: bool
+    confidence_score: Optional[float] = None
+    rejection_reason: Optional[str] = None

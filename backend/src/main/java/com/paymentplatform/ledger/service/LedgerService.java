@@ -19,9 +19,9 @@ public class LedgerService {
 
     @Transactional
     public List<LedgerDTO> saveEntries(List<LedgerEntry> entries) {
-        return ledgerRepository.saveAll(entries).stream()
+        return new java.util.ArrayList<>(ledgerRepository.saveAll(entries)).stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public List<LedgerDTO> getByTransactionId(UUID transactionId) {

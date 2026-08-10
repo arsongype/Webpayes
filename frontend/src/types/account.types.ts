@@ -4,5 +4,6 @@ export interface AccountDTO {
   accountNumber: string;
   balance: string; // BigDecimal serialized as string
   currency: string;
+  kycStatus?: string;
   createdAt?: string;
 }

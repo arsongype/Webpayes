@@ -30,8 +30,8 @@ public class Transaction {
     @JoinColumn(name = "sender_account_id", nullable = false)
     private Account senderAccount;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "receiver_account_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_account_id")
     private Account receiverAccount;
 
     @Column(nullable = false, precision = 19, scale = 4)

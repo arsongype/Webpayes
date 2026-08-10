@@ -19,5 +19,6 @@ public class AccountDTO {
     private String accountNumber;
     private BigDecimal balance;
     private String currency;
+    private String kycStatus;
     private Instant createdAt;
 }

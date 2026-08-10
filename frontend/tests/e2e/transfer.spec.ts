@@ -1,6 +1,6 @@
 import { test, expect, request } from '@playwright/test';
 
-test('register -> login -> create transfer -> check balance', async ({ browser }) => {
+test('register -> login -> create transfer -> check balance', async () => {
   const apiContext = await request.newContext({ baseURL: 'http://localhost:8081' });
 
   // Register user

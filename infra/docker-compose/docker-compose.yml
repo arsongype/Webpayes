@@ -1,0 +1,216 @@
+# Canonical local/dev stack for the Payment Online Platform.
+# Usage:  docker compose -f infra/docker-compose/docker-compose.yml up --build
+# From repo root you can also run:  docker compose -f infra/docker-compose/docker-compose.yml up --build
+
+name: payment-online
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-payment}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-payment}
+      POSTGRES_DB: ${DB_NAME:-paymentplatform}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-payment} -d ${DB_NAME:-paymentplatform}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    restart: unless-stopped
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    ports:
+      - "9092:9092"
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: ../../infra/docker/backend.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-paymentplatform}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-payment}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-payment}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET:-change_me_dev_secret_please_override_in_prod_min_32_chars}
+      JWT_EXPIRATION_MS: 86400000
+      AI_FRAUD_DETECTION_URL: http://fraud-detection:8001
+      AI_RISK_SCORING_URL: http://risk-scoring:8002
+      AI_KYC_URL: http://kyc-verification:8003
+      AI_CHATBOT_URL: http://chatbot:8004
+      AI_RECOMMENDATION_URL: http://recommendation:8005
+      AI_ROUTING_URL: http://routing-engine:8006
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: ../../infra/docker/frontend.Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8081/api
+    volumes:
+      - ../../frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:5173/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  fraud-detection:
+    build:
+      context: ../../ai-services/fraud-detection-service
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      OLLAMA_BASE_URL: http://ollama:11434
+
+  risk-scoring:
+    build:
+      context: ../../ai-services/risk-scoring-service
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      PORT: 8002
+
+  kyc-verification:
+    build:
+      context: ../../ai-services/kyc-verification-service
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      PORT: 8003
+      OLLAMA_BASE_URL: http://ollama:11434
+
+  chatbot:
+    build:
+      context: ../../ai-services/chatbot-service
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8004:8004"
+    environment:
+      PORT: 8004
+      OLLAMA_BASE_URL: http://ollama:11434
+    depends_on:
+      - ollama
+
+  recommendation:
+    build:
+      context: ../../ai-services/recommendation-service
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8005:8005"
+    environment:
+      PORT: 8005
+
+  routing-engine:
+    build:
+      context: ../../ai-services/routing-engine-service
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8006:8006"
+    environment:
+      PORT: 8006
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../../infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../infra/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  ollama_data:
+  grafana_data:

@@ -3,6 +3,7 @@ package com.paymentplatform.aiclient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -19,7 +20,7 @@ public class RoutingClient {
     @Value("${ai.routing.url:http://localhost:8006}")
     private String routingUrl;
 
-    public RoutingResponse getBestChannel(RoutingRequest request) {
+    public RoutingResponse getBestChannel(@NonNull RoutingRequest request) {
         try {
             return webClientBuilder.build()
                     .method(HttpMethod.POST)

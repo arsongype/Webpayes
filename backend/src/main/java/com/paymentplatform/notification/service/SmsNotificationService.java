@@ -1,6 +1,5 @@
 package com.paymentplatform.notification.service;
 
-import com.paymentplatform.notification.dto.SmsRequest;
 import com.paymentplatform.notification.provider.SmsProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;

@@ -1,0 +1,30 @@
+# Test override. Brings up only the dependencies required to run the
+# backend integration / e2e tests from the host, then exits.
+#   docker compose -f infra/docker-compose/docker-compose.yml \
+#                  -f infra/docker-compose/docker-compose.test.yml up -d
+#   # run backend tests, playwright e2e, etc. from the host
+#   docker compose -f infra/docker-compose/docker-compose.yml \
+#                  -f infra/docker-compose/docker-compose.test.yml down
+
+services:
+  backend:
+    profiles: ["test"]
+    command: ["java", "-jar", "/app/app.jar"]
+
+  frontend:
+    profiles: ["test"]
+
+  fraud-detection:
+    profiles: ["test"]
+  risk-scoring:
+    profiles: ["test"]
+  kyc-verification:
+    profiles: ["test"]
+  chatbot:
+    profiles: ["test"]
+  recommendation:
+    profiles: ["test"]
+  routing-engine:
+    profiles: ["test"]
+  ollama:
+    profiles: ["test"]

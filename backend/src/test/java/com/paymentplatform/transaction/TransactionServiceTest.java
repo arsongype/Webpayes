@@ -30,6 +30,7 @@ class TransactionServiceTest {
     private WalletService walletService;
     private com.paymentplatform.aiclient.FraudDetectionClient fraudClient;
     private com.paymentplatform.aiclient.RiskScoringClient riskClient;
+    private com.paymentplatform.notification.service.NotificationService notificationService;
     private TransactionService transactionService;
 
     @BeforeEach
@@ -41,6 +42,7 @@ class TransactionServiceTest {
         walletService = mock(WalletService.class);
         fraudClient = mock(com.paymentplatform.aiclient.FraudDetectionClient.class);
         riskClient = mock(com.paymentplatform.aiclient.RiskScoringClient.class);
+        notificationService = mock(com.paymentplatform.notification.service.NotificationService.class);
 
         transactionService = new TransactionService(
                 transactionRepository,
@@ -50,7 +52,8 @@ class TransactionServiceTest {
                 walletService,
                 fraudClient,
                 riskClient,
-                mock(com.paymentplatform.operator.OperatorClientRegistry.class)
+                mock(com.paymentplatform.operator.OperatorClientRegistry.class),
+                notificationService
         );
     }
 

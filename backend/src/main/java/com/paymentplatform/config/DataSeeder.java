@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.UUID;
+import java.util.Objects;
 
 @Component
 @Profile("!test")
@@ -32,22 +32,22 @@ public class DataSeeder implements CommandLineRunner {
         final String adminPassword = "Admin123!";
 
         if (!userRepository.existsByEmail(adminEmail)) {
-            User admin = User.builder()
+            User admin = Objects.requireNonNull(User.builder()
                     .firstName("Admin")
                     .lastName("User")
                     .email(adminEmail)
                     .passwordHash(passwordEncoder.encode(adminPassword))
                     .role(com.paymentplatform.common.constants.Role.ADMIN)
                     .enabled(true)
-                    .build();
+                    .build());
             admin = userRepository.save(admin);
 
-            Account account = Account.builder()
+            Account account = Objects.requireNonNull(Account.builder()
                     .user(admin)
                     .accountNumber("ADMIN-0001")
                     .balance(BigDecimal.ZERO)
                     .currency("MGA")
-                    .build();
+                    .build());
             accountRepository.save(account);
 
             System.out.println("Created default admin: email='" + adminEmail + "' password='" + adminPassword + "'");

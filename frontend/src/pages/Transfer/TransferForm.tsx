@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { transfer, fetchTransactions } from '../../store/slices/transactionSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import Button from '../../components/common/Button/Button';
 import accountService from '../../services/accountService';
+import type { AccountDTO } from '../../types/account.types';
+import type { TransferRequest } from '../../types/transaction.types';
 
 const transferSchema = z.object({
   senderAccountId: z.string().optional(),
@@ -18,26 +20,24 @@ const transferSchema = z.object({
 
 type TransferFormData = z.infer<typeof transferSchema>;
 
-interface Account {
-  id: string;
-  accountNumber: string;
-  balance: string | number;
-}
+type TransferPayload = TransferRequest & {
+  receiverOperator?: 'none' | 'mvola' | 'airtel' | 'orange';
+};
 
 const TransferForm = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.transactions);
   const [success, setSuccess] = useState<string | null>(null);
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accounts, setAccounts] = useState<AccountDTO[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
 
   const {
     register,
     handleSubmit,
     reset,
-    watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<TransferFormData>({
     resolver: zodResolver(transferSchema),
@@ -49,8 +49,8 @@ const TransferForm = () => {
 
   const [useMyWallet, setUseMyWallet] = useState(false);
 
-  const senderAccountId = watch('senderAccountId');
-  const receiverOperatorValue = watch('receiverOperator');
+  const senderAccountId = useWatch({ control, name: 'senderAccountId' });
+  const receiverOperatorValue = useWatch({ control, name: 'receiverOperator' });
 
   // Load user accounts
   useEffect(() => {
@@ -75,17 +75,13 @@ const TransferForm = () => {
   const onSubmit = async (data: TransferFormData) => {
     setSuccess(null);
     try {
-      const payload: any = {
-        // if senderAccountId is empty/undefined, let backend use current user's default wallet
-        ...(data.senderAccountId ? { senderAccountId: data.senderAccountId } : {}),
+      const payload: TransferPayload = {
+        senderAccountId: data.senderAccountId ?? undefined,
         receiverAccountId: data.receiverAccountId,
         amount: data.amount,
         description: data.description,
+        receiverOperator: data.receiverOperator !== 'none' ? data.receiverOperator : undefined,
       };
-      if ((data as any).receiverOperator && (data as any).receiverOperator !== 'none') {
-        payload.receiverOperator = (data as any).receiverOperator;
-      }
-
       const response = await dispatch(transfer(payload));
       if (transfer.fulfilled.match(response)) {
         setSuccess(`Transfert effectué avec succès. Référence: ${response.payload.reference}`);

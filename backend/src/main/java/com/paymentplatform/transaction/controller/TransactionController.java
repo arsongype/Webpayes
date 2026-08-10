@@ -1,8 +1,6 @@
 package com.paymentplatform.transaction.controller;
 
-import com.paymentplatform.common.exception.BusinessException;
 import com.paymentplatform.security.CurrentUserService;
-import com.paymentplatform.transaction.TransactionStatus;
 import com.paymentplatform.transaction.dto.TransferRequestDTO;
 import com.paymentplatform.transaction.dto.TransferResponseDTO;
 import com.paymentplatform.transaction.dto.TransactionDTO;
@@ -10,8 +8,6 @@ import com.paymentplatform.transaction.entity.Transaction;
 import com.paymentplatform.transaction.service.TransactionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +36,6 @@ public class TransactionController {
             @RequestParam(defaultValue = "20") int size) {
         UUID currentUserId = currentUserService.getCurrentUserId();
         boolean isAdmin = currentUserService.isCurrentUserAdmin();
-        Pageable pageable = PageRequest.of(page, size);
 
         List<Transaction> transactions = transactionService.listTransactions(currentUserId, isAdmin, page, size);
         List<TransactionDTO> dtos = transactions.stream()

@@ -3,9 +3,10 @@ package com.paymentplatform.user.controller;
 import com.paymentplatform.user.dto.UserDTO;
 import com.paymentplatform.user.entity.User;
 import com.paymentplatform.user.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UserDTO>> list() {
         List<UserDTO> dtos = userRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
@@ -77,7 +79,7 @@ public class UserController {
         return userRepository.findById(id).map(u -> ResponseEntity.ok(toDto(u))).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    private UserDTO toDto(User u) {
+    private UserDTO toDto(@NonNull User u) {
         return UserDTO.builder()
                 .id(u.getId())
                 .firstName(u.getFirstName())

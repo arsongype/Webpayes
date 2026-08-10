@@ -2,6 +2,7 @@ package com.paymentplatform.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -49,7 +50,7 @@ public class GlobalExceptionHandler {
             .body(buildBody("Une erreur interne est survenue", HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
-    private Map<String, Object> buildBody(String message, HttpStatus status) {
+    private Map<String, Object> buildBody(String message, @NonNull HttpStatus status) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", Instant.now().toString());
         body.put("status", status.value());

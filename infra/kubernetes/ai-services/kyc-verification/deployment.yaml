@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyc-verification
+  namespace: payment-platform
+  labels:
+    app: kyc-verification
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kyc-verification
+  template:
+    metadata:
+      labels:
+        app: kyc-verification
+    spec:
+      containers:
+        - name: kyc-verification
+          image: payment-online/kyc-verification:1.0.0
+          ports:
+            - containerPort: 8003
+          env:
+            - name: PORT
+              value: "8003"
+            - name: OLLAMA_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-platform-config
+                  key: OLLAMA_BASE_URL
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kyc-verification
+  namespace: payment-platform
+  labels:
+    app: kyc-verification
+spec:
+  selector:
+    app: kyc-verification
+  ports:
+    - port: 8003
+      targetPort: 8003
+  type: ClusterIP

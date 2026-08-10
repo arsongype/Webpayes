@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+
+logging:
+  level:
+    com.paymentplatform: INFO
+    org.springframework.security: INFO
+    org.hibernate: INFO

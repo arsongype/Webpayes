@@ -2,17 +2,23 @@ import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface BalanceChartProps {
-  transactions: { createdAt: string; amount: string; type: string }[];
+  transactions: Array<{ createdAt?: string; amount: string; type: string }>;
   currency?: string;
 }
 
 const BalanceChart = ({ transactions, currency = 'MGA' }: BalanceChartProps) => {
   const data = useMemo(() => {
-    const sorted = [...transactions].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const sorted = [...transactions].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : Number.POSITIVE_INFINITY;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : Number.POSITIVE_INFINITY;
+      return dateA - dateB;
+    });
+
     return sorted.reduce<{ date: string; balance: number }[]>((acc, tx) => {
       const last = acc.length > 0 ? acc[acc.length - 1].balance : 0;
+      const date = tx.createdAt ? new Date(tx.createdAt) : new Date();
       acc.push({
-        date: new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+        date: date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
         balance: last + Number(tx.amount),
       });
       return acc;

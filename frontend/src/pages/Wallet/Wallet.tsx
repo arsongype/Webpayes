@@ -25,8 +25,9 @@ const Wallet = () => {
 
   const accountDisplay = useMemo(() => {
     if (!balance) return 'Compte inconnu';
-    return `${balance.accountId.slice(0, 8)}... - ${balance.currency} ${Number(balance.balance).toFixed(2)}`;
-  }, [balance]);
+    const label = accounts.find((a) => a.id === balance.accountId)?.accountNumber ?? balance.accountId;
+    return `${label} - ${balance.currency} ${Number(balance.balance).toFixed(2)}`;
+  }, [balance, accounts]);
 
   useEffect(() => {
     accountService.list()
@@ -163,7 +164,7 @@ const Wallet = () => {
                     <select
                       value={accountOperator}
                       onChange={(e) => {
-                        const op = e.target.value as any;
+                        const op = e.target.value as 'none' | 'mvola' | 'airtel' | 'orange';
                         setAccountOperator(op);
                         // clear resolved id when selecting external operator
                         if (op !== 'none') {
@@ -217,6 +218,19 @@ const Wallet = () => {
                 <div className="text-sm text-slate-500 dark:text-slate-400">Solde du compte</div>
                 <div className="mt-3 text-3xl font-semibold text-slate-900 dark:text-white">{balance ? `${balance.currency} ${Number(balance.balance).toFixed(2)}` : '—'}</div>
                 <div className="mt-1 text-sm text-slate-500 dark:text-slate-500">{accountDisplay}</div>
+                {accounts[0]?.kycStatus && (
+                  <div className="mt-3">
+                    {accounts[0].kycStatus === 'VERIFIED' ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300">
+                        KYC vérié
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-300">
+                        KYC : {accounts[0].kycStatus}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {accountOperator !== 'none' && accountInput && (
                   <div className="mt-3 text-sm text-amber-600 dark:text-amber-300">
                     {accountOperator === 'mvola' ? (

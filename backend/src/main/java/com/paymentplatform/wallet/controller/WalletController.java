@@ -6,7 +6,6 @@ import com.paymentplatform.wallet.service.WalletService;
 import com.paymentplatform.wallet.dto.WalletTransactionRequestDTO;
 import com.paymentplatform.security.CurrentUserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

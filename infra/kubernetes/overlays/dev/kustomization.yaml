@@ -1,0 +1,54 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: payment-platform
+namePrefix: dev-
+
+commonLabels:
+  env: dev
+
+resources:
+  - ../../base/namespace.yaml
+  - ../../base/configmap.yaml
+  - ../../base/secrets.yaml
+  - ../../database/postgres-pvc.yaml
+  - ../../database/postgres-statefulset.yaml
+  - ../../backend/deployment.yaml
+  - ../../backend/service.yaml
+  - ../../backend/hpa.yaml
+  - ../../backend/fraud-detection/deployment.yaml
+  - ../../frontend/deployment.yaml
+  - ../../frontend/service.yaml
+  - ../../frontend/ingress.yaml
+  - ../../ai-services/chatbot/deployment.yaml
+  - ../../ai-services/fraud-detection/deployment.yaml
+  - ../../ai-services/risk-scoring/deployment.yaml
+  - ../../ai-services/kyc-verification/deployment.yaml
+  - ../../ai-services/recommendation/deployment.yaml
+  - ../../ai-services/routing-engine/deployment.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: backend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: backend
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 4

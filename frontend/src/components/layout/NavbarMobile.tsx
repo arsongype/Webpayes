@@ -1,27 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Wallet, Send, History, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Wallet, Send, QrCode, Zap, Settings, LogOut, Menu, X, Shield, Users, History, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { ADMIN } from '../../constants/roles.constants';
 
 export const NavbarMobile = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
+  const isAdmin = user?.roles?.includes(ADMIN);
+
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
+    { icon: LayoutDashboard, label: 'Accueil', path: '/dashboard' },
     { icon: Wallet, label: 'Portefeuille', path: '/wallet' },
     { icon: Send, label: 'Transfert', path: '/transfer' },
+    { icon: QrCode, label: 'QR', path: '/qr' },
+  ];
+
+  const extraItems = [
     { icon: History, label: 'Transactions', path: '/transactions' },
+    { icon: Zap, label: 'Assistant', path: '/assistant' },
+    { icon: AlertTriangle, label: 'Alertes fraude', path: '/fraud-alerts' },
     { icon: Settings, label: 'Profil', path: '/profile' },
+    ...(isAdmin ? [{ icon: Shield, label: 'Admin', path: '/admin/dashboard' }] : []),
+    ...(isAdmin ? [{ icon: Users, label: 'Utilisateurs', path: '/admin/users' }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -30,7 +37,6 @@ export const NavbarMobile = () => {
 
   return (
     <div className="lg:hidden">
-      {/* Backdrop */}
       {menuOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/40"
@@ -41,7 +47,7 @@ export const NavbarMobile = () => {
 
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-around">
-          {menuItems.slice(0, 4).map((item) => {
+          {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
@@ -54,12 +60,11 @@ export const NavbarMobile = () => {
                 }`}
               >
                 <Icon size={24} />
-                <span className="text-xs mt-1 font-medium">{item.label.split(' ')[0]}</span>
+                <span className="text-xs mt-1 font-medium">{item.label}</span>
               </Link>
             );
           })}
 
-          {/* Menu Button */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-colors ${
@@ -73,21 +78,26 @@ export const NavbarMobile = () => {
           </button>
         </div>
 
-        {/* Dropdown Menu */}
         {menuOpen && (
           <div className="absolute bottom-full left-0 right-0 mb-px border-t border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
-            <Link
-              to="/profile"
-              onClick={() => setMenuOpen(false)}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
-                isActive('/profile')
-                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300'
-                  : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Settings size={20} />
-              <span className="font-medium">Profil</span>
-            </Link>
+            {extraItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-colors ${
+                    isActive(item.path)
+                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300'
+                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
             <button
               onClick={handleLogout}
               className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400"

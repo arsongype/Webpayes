@@ -13,11 +13,15 @@ export interface LoginPayload {
 export interface RegisterPayload extends LoginPayload {
   firstName: string;
   lastName: string;
+  role?: string;
 }
 
 const authService = {
   login: async (payload: LoginPayload): Promise<AuthTokenResponse> => {
-    const response = await api.post('/auth/login', payload);
+    const response = await api.post('/auth/login', {
+      email: payload.email,
+      password: payload.password,
+    });
     return response.data;
   },
   register: async (payload: RegisterPayload): Promise<AuthTokenResponse> => {

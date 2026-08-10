@@ -31,6 +31,9 @@ class AccountServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private com.paymentplatform.aiclient.KycClient kycClient;
+
     @InjectMocks
     private AccountService accountService;
 

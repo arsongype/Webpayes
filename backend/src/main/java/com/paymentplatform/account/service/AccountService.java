@@ -3,6 +3,7 @@ package com.paymentplatform.account.service;
 import com.paymentplatform.account.dto.AccountDTO;
 import com.paymentplatform.account.dto.AccountRequestDTO;
 import com.paymentplatform.account.entity.Account;
+import com.paymentplatform.account.entity.AccountKycStatus;
 import com.paymentplatform.account.repository.AccountRepository;
 import com.paymentplatform.common.exception.BusinessException;
 import com.paymentplatform.user.entity.User;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final com.paymentplatform.aiclient.KycClient kycClient;
 
     public List<AccountDTO> listAccounts(UUID currentUserId, boolean isAdmin, UUID filterUserId) {
         if (filterUserId != null) {
@@ -49,7 +52,7 @@ public class AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Compte introuvable", HttpStatus.NOT_FOUND));
 
-        if (!isAdmin && !account.getUser().getId().equals(currentUserId)) {
+        if (!isAdmin && !Objects.requireNonNull(account.getUser()).getId().equals(currentUserId)) {
             throw new AccessDeniedException("Accès refusé");
         }
 
@@ -82,6 +85,25 @@ public class AccountService {
                 .currency(currency)
                 .build();
 
+        // Verify the account holder identity through the KYC AI service.
+        // Failures are non-blocking: the account is still created, simply unverified.
+        AccountKycStatus kycStatus = AccountKycStatus.NOT_VERIFIED;
+        try {
+            com.paymentplatform.aiclient.KycAccountVerificationResponse kycResponse = kycClient.verifyAccount(
+                    com.paymentplatform.aiclient.KycAccountVerificationRequest.builder()
+                            .user_id(user.getId().toString())
+                            .account_number(accountNumber)
+                            .full_name(((user.getFirstName() != null ? user.getFirstName() : "") + " "
+                                    + (user.getLastName() != null ? user.getLastName() : "")).trim())
+                            .build());
+            if (kycResponse != null && Boolean.TRUE.equals(kycResponse.getVerified())) {
+                kycStatus = AccountKycStatus.VERIFIED;
+            }
+        } catch (Exception ignored) {
+            // keep NOT_VERIFIED when the KYC service is unavailable
+        }
+        account.setKycStatus(kycStatus);
+
         return toDto(accountRepository.save(account));
     }
 
@@ -89,7 +111,7 @@ public class AccountService {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Compte introuvable", HttpStatus.NOT_FOUND));
 
-        if (!isAdmin && !account.getUser().getId().equals(currentUserId)) {
+        if (!isAdmin && !Objects.requireNonNull(account.getUser()).getId().equals(currentUserId)) {
             throw new AccessDeniedException("Accès refusé");
         }
 
@@ -118,8 +140,10 @@ public class AccountService {
     }
 
     private User resolveUser(UUID userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("Utilisateur introuvable", HttpStatus.BAD_REQUEST));
+        return Objects.requireNonNull(
+                userRepository.findById(userId)
+                        .orElseThrow(() -> new BusinessException("Utilisateur introuvable", HttpStatus.BAD_REQUEST))
+        );
     }
 
     private String generateAccountNumber() {
@@ -133,6 +157,7 @@ public class AccountService {
                 account.getAccountNumber(),
                 account.getBalance(),
                 account.getCurrency(),
+                account.getKycStatus() != null ? account.getKycStatus().name() : null,
                 account.getCreatedAt()
         );
     }

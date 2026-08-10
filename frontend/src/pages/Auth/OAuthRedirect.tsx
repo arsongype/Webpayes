@@ -1,26 +1,22 @@
-import { useLayoutEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 const OAuthRedirect = () => {
   const [searchParams] = useSearchParams();
   const { completeOAuthLogin } = useAuth();
-  const [message, setMessage] = useState('Connexion Google en cours...');
+  const token = searchParams.get('token');
+  const message = token ? 'Connexion Google en cours...' : 'Le jeton Google est manquant ou invalide.';
 
-  useLayoutEffect(() => {
-    const token = searchParams.get('token');
-
-    if (!token) {
-      setMessage('Le jeton Google est manquant ou invalide.');
-      return;
-    }
+  useEffect(() => {
+    if (!token) return;
 
     try {
       completeOAuthLogin(token);
     } catch {
-      setMessage('Impossible de finaliser la connexion Google.');
+      // Navigation is handled by completeOAuthLogin on success only.
     }
-  }, [completeOAuthLogin, searchParams]);
+  }, [completeOAuthLogin, token]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 text-slate-900 dark:bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.15),transparent_35%),linear-gradient(135deg,#020617_0%,#0f172a_52%,#111827_100%)] dark:text-slate-50">

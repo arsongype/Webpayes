@@ -6,13 +6,15 @@ import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import accountService from '../../services/accountService';
 import walletService from '../../services/walletService';
 import BalanceChart from '../../components/charts/BalanceChart';
+import type { AccountDTO } from '../../types/account.types';
+import type { WalletTransactionDTO } from '../../types/wallet.types';
 
 const Dashboard = () => {
   const dispatch = useAppDispatch();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { stats, loading } = useAppSelector((state) => state.transactions);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<AccountDTO[]>([]);
+  const [transactions, setTransactions] = useState<WalletTransactionDTO[]>([]);
 
   useEffect(() => {
     dispatch(fetchStats());
@@ -28,7 +30,7 @@ const Dashboard = () => {
           const hist = await walletService.getHistory(accs[0].id);
           setTransactions(hist);
         }
-      } catch (err) {
+      } catch {
         // ignore
       }
     };
@@ -69,32 +71,38 @@ const Dashboard = () => {
           </div>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <Link
-              to="/wallet"
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 sm:w-auto dark:bg-slate-800 dark:hover:bg-slate-700"
-            >
-              Gérer mon portefeuille
+            <Link to="/wallet" className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 sm:w-auto dark:bg-slate-800 dark:hover:bg-slate-700">
+              Portefeuille
             </Link>
-            <Link
-              to="/transactions"
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-400 sm:w-auto"
-            >
-              Voir les transactions
+            <Link to="/transactions" className="inline-flex w-full items-center justify-center rounded-2xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-400 sm:w-auto">
+              Transactions
             </Link>
-            <Link
-              to="/transfer"
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 sm:w-auto"
-            >
-              Nouveau transfert
+            <Link to="/transfer" className="inline-flex w-full items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 sm:w-auto">
+              Transfert
             </Link>
-            <button
-              type="button"
-              onClick={logout}
-              className="inline-flex w-full items-center justify-center rounded-2xl bg-cyan-400 px-5 py-3 font-semibold text-slate-950 transition hover:bg-cyan-300 sm:w-auto"
-            >
-              Déconnexion
-            </button>
+            <Link to="/payment-methods" className="inline-flex w-full items-center justify-center rounded-2xl bg-indigo-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 sm:w-auto">
+              Moyens de paiement
+            </Link>
+            <Link to="/billing" className="inline-flex w-full items-center justify-center rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-400 sm:w-auto">
+              Facturation
+            </Link>
           </div>
+
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row">
+            <Link to="/refunds" className="inline-flex w-full items-center justify-center rounded-2xl bg-rose-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 sm:w-auto">
+              Remboursements
+            </Link>
+            <Link to="/disputes" className="inline-flex w-full items-center justify-center rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-400 sm:w-auto">
+              Litiges
+            </Link>
+            <Link to="/merchant/request" className="inline-flex w-full items-center justify-center rounded-2xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 sm:w-auto">
+              Devenir marchand
+            </Link>
+            <Link to="/fraud-alerts" className="inline-flex w-full items-center justify-center rounded-2xl bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 sm:w-auto">
+              Alertes fraude
+            </Link>
+          </div>
+
           {accounts.length > 0 && (
             <div className="mt-8 rounded-4xl border border-slate-200 bg-slate-50 p-6 dark:border-white/10 dark:bg-slate-800/50">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Solde et historique</h2>

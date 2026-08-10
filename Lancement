@@ -1,0 +1,27 @@
+# Backend
+cd D:\M2\ STAGE\payment-online\backend
+mvn clean compile -DskipTests
+mvn spring-boot:run
+
+# AI services (depuis .venv)
+cd D:\M2\ STAGE\payment-online\ai-services\fraud-detection-service
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8001
+
+cd D:\M2\ STAGE\payment-online\ai-services\risk-scoring-service
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8002
+
+cd D:\M2\ STAGE\payment-online\ai-services\kyc-verification-service
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8003
+
+cd D:\M2\ STAGE\payment-online\ai-services\chatbot-service
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8004
+
+cd D:\M2\ STAGE\payment-online\ai-services\recommendation-service
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8005
+
+cd D:\M2\ STAGE\payment-online\ai-services\routing-engine-service
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8006
+
+# Frontend
+cd D:\M2\ STAGE\payment-online\frontend
+npm run dev

@@ -3,6 +3,7 @@ package com.paymentplatform.aiclient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -19,7 +20,7 @@ public class ChatbotClient {
     @Value("${ai.chatbot.url:http://localhost:8004}")
     private String chatbotUrl;
 
-    public ChatResponse chat(ChatRequest request) {
+    public ChatResponse chat(@NonNull ChatRequest request) {
         try {
             return webClientBuilder.build()
                     .method(HttpMethod.POST)

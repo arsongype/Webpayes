@@ -1,0 +1,31 @@
+# Production override. Use together with the base compose:
+#   docker compose -f infra/docker-compose/docker-compose.yml \
+#                  -f infra/docker-compose/docker-compose.prod.yml up --build
+
+services:
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set for production}
+      JWT_EXPIRATION_MS: 3600000
+    restart: always
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: ../../infra/docker/frontend.prod.Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8081/api}
+    ports:
+      - "80:80"
+    volumes: []
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8081/api}
+
+  postgres:
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  ollama:
+    restart: always

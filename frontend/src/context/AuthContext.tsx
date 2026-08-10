@@ -1,37 +1,12 @@
-import { createContext, useLayoutEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import authService, { extractAccessToken } from '../services/authService';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import type { LoginPayload, RegisterPayload } from '../services/authService';
-
-type TokenPayload = {
-  sub?: string;
-  email?: string;
-  roles?: string[];
-  role?: string;
-  firstName?: string;
-  lastName?: string;
-  exp?: number;
-};
-
-export type AuthUser = TokenPayload & {
-  token: string;
-  avatar?: string;
-};
-
-interface AuthContextType {
-  user: AuthUser | null;
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
-  loginWithGoogle: () => void;
-  completeOAuthLogin: (token: string) => void;
-  updateUser: (updates: Partial<AuthUser>) => void;
-}
-
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './authContextStore';
+import type { AuthUser, TokenPayload } from './authContextTypes';
+import { ADMIN } from '../constants/roles.constants';
 
 const overridesKey = (sub?: string) => `profileOverrides:${sub ?? 'guest'}`;
 
@@ -49,9 +24,15 @@ const saveOverrides = (sub: string | undefined, updates: Partial<AuthUser>) => {
   localStorage.setItem(overridesKey(sub), JSON.stringify({ ...current, ...updates }));
 };
 
+const getRoles = (payload: TokenPayload): string[] => {
+  if (payload.roles && payload.roles.length > 0) return payload.roles;
+  if (payload.role) return [payload.role];
+  return ['user'];
+};
+
 const buildUserFromToken = (token: string): AuthUser => {
   const payload = jwtDecode<TokenPayload>(token);
-  const roles = payload.roles ?? (payload.role ? [payload.role] : ['user']);
+  const roles = getRoles(payload);
   const overrides = loadOverrides(payload.sub);
 
   return {
@@ -62,63 +43,98 @@ const buildUserFromToken = (token: string): AuthUser => {
   };
 };
 
+const determineRedirect = (token: string): string => {
+  try {
+    const payload = jwtDecode<TokenPayload>(token);
+    return getRoles(payload).includes(ADMIN) ? '/admin/dashboard' : '/dashboard';
+  } catch {
+    return '/dashboard';
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      return buildUserFromToken(token);
+    } catch {
+      localStorage.removeItem('token');
+      return null;
+    }
+  });
   const navigate = useNavigate();
 
-  useLayoutEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        setUser(buildUserFromToken(token));
-      } catch {
-        localStorage.removeItem('token');
-      }
-    }
-  }, []);
-
-  const persistToken = (token: string) => {
+  const persistToken = useCallback((token: string) => {
     localStorage.setItem('token', token);
     setUser(buildUserFromToken(token));
-  };
+  }, []);
 
-  const login = async (payload: LoginPayload) => {
-    const response = await authService.login(payload);
-    const token = extractAccessToken(response);
-    if (!token) {
-      throw new Error('Token JWT manquant dans la réponse de connexion');
-    }
-    persistToken(token);
-    navigate('/dashboard');
-  };
-
-  const register = async (payload: RegisterPayload) => {
-    const response = await authService.register(payload);
-    const token = extractAccessToken(response);
-    if (!token) {
-      throw new Error("Token JWT manquant dans la réponse d'inscription");
-    }
-    persistToken(token);
-    navigate('/dashboard');
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token');
     setUser(null);
     navigate('/login');
-  };
+  }, [navigate]);
 
-  const loginWithGoogle = () => {
+  const login = useCallback(
+    async (payload: LoginPayload, options?: { redirectTo?: string; requireRole?: string[] }) => {
+      const response = await authService.login(payload);
+      const token = extractAccessToken(response);
+      if (!token) {
+        throw new Error('Token JWT manquant dans la réponse de connexion');
+      }
+      persistToken(token);
+      if (options?.requireRole) {
+        try {
+          const decoded = jwtDecode<TokenPayload>(token);
+          const roles = getRoles(decoded);
+          if (!options.requireRole.some((role) => roles.includes(role))) {
+            logout();
+            throw new Error(`Accès refusé : ce compte n'a pas les droits ${options.requireRole.join(' ou ')}.`);
+          }
+        } catch (err) {
+          if (err instanceof Error && err.message.includes('Accès refusé')) {
+            throw err;
+          }
+        }
+      }
+      const destination = options?.redirectTo ?? determineRedirect(token);
+      navigate(destination);
+    },
+    [navigate, persistToken, logout],
+  );
+
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const response = await authService.register(payload);
+      const token = extractAccessToken(response);
+      if (!token) {
+        throw new Error("Token JWT manquant dans la réponse d'inscription");
+      }
+      persistToken(token);
+      const redirectTo = determineRedirect(token);
+      navigate(redirectTo);
+    },
+    [navigate, persistToken],
+  );
+
+  const loginWithGoogle = useCallback(() => {
     const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
     window.location.href = `${apiUrl}/auth/google`;
-  };
+  }, []);
 
-  const completeOAuthLogin = (token: string) => {
-    persistToken(token);
-    navigate('/dashboard', { replace: true });
-  };
+  const completeOAuthLogin = useCallback(
+    (token: string) => {
+      persistToken(token);
+      const redirectTo = determineRedirect(token);
+      navigate(redirectTo, { replace: true });
+    },
+    [navigate, persistToken],
+  );
 
-  const updateUser = (updates: Partial<AuthUser>) => {
+  const updateUser = useCallback((updates: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...updates };
@@ -130,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       return next;
     });
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -143,7 +159,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       completeOAuthLogin,
       updateUser,
     }),
-    [user],
+    [user, login, register, logout, loginWithGoogle, completeOAuthLogin, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

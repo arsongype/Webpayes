@@ -3,9 +3,7 @@ package com.paymentplatform.transaction.service;
 import com.paymentplatform.account.entity.Account;
 import com.paymentplatform.account.repository.AccountRepository;
 import com.paymentplatform.common.exception.BusinessException;
-import com.paymentplatform.ledger.dto.LedgerDTO;
 import com.paymentplatform.ledger.entity.LedgerEntry;
-import com.paymentplatform.ledger.repository.LedgerRepository;
 import com.paymentplatform.ledger.service.LedgerService;
 import com.paymentplatform.security.CurrentUserService;
 import com.paymentplatform.transaction.TransactionStatus;
@@ -28,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +39,7 @@ public class TransactionService {
     private final com.paymentplatform.aiclient.FraudDetectionClient fraudDetectionClient;
     private final com.paymentplatform.aiclient.RiskScoringClient riskScoringClient;
     private final com.paymentplatform.operator.OperatorClientRegistry operatorClientRegistry;
+    private final com.paymentplatform.notification.service.NotificationService notificationService;
 
     @Transactional
         public TransferResponseDTO transfer(TransferRequestDTO request) {
@@ -124,29 +122,35 @@ public class TransactionService {
             }
 
             // Fraud/Risk with external metadata
-            com.paymentplatform.aiclient.FraudDetectionRequest fraudRequest = com.paymentplatform.aiclient.FraudDetectionRequest.builder()
-                .transactionId(saved.getId().toString())
-                .amount(saved.getAmount())
-                .currency(saved.getCurrency())
-                .senderAccountId(saved.getSenderAccount().getId().toString())
-                .receiverAccountId(request.getReceiverAccountId())
-                .metadata(Map.of("description", request.getDescription(), "operator", request.getReceiverOperator()))
-                .build();
-            com.paymentplatform.aiclient.FraudDetectionResponse fraudResponse = fraudDetectionClient.analyze(fraudRequest);
-            saved.setFraudScore(fraudResponse.getFraudScore());
+        com.paymentplatform.aiclient.FraudDetectionRequest fraudRequest = com.paymentplatform.aiclient.FraudDetectionRequest.builder()
+            .transactionId(saved.getId().toString())
+            .amount(saved.getAmount())
+            .currency(saved.getCurrency())
+            .senderAccountId(saved.getSenderAccount().getId().toString())
+            .receiverAccountId(saved.getReceiverAccount() != null ? saved.getReceiverAccount().getId().toString() : null)
+            .metadata(Map.of("description", request.getDescription(), "operator", request.getReceiverOperator()))
+            .build();
+        com.paymentplatform.aiclient.FraudDetectionResponse fraudResponse = fraudDetectionClient.analyze(fraudRequest);
+        saved.setFraudScore(fraudResponse.getFraudScore());
 
-            com.paymentplatform.aiclient.RiskScoringRequest riskRequest = com.paymentplatform.aiclient.RiskScoringRequest.builder()
-                .transactionId(saved.getId().toString())
-                .amount(saved.getAmount())
-                .currency(saved.getCurrency())
-                .senderAccountId(saved.getSenderAccount().getId().toString())
-                .receiverAccountId(request.getReceiverAccountId())
-                .metadata(Map.of("description", request.getDescription(), "operator", request.getReceiverOperator()))
-                .build();
+        com.paymentplatform.aiclient.RiskScoringRequest riskRequest = com.paymentplatform.aiclient.RiskScoringRequest.builder()
+            .transactionId(saved.getId().toString())
+            .amount(saved.getAmount())
+            .currency(saved.getCurrency())
+            .senderAccountId(saved.getSenderAccount().getId().toString())
+            .receiverAccountId(saved.getReceiverAccount() != null ? saved.getReceiverAccount().getId().toString() : null)
+            .metadata(Map.of("description", request.getDescription(), "operator", request.getReceiverOperator()))
+            .build();
             com.paymentplatform.aiclient.RiskScoringResponse riskResponse = riskScoringClient.score(riskRequest);
             saved.setRiskScore(riskResponse.getRiskScore());
 
             transactionRepository.save(saved);
+
+            try {
+                notificationService.sendTransactionNotification(saved);
+            } catch (Exception e) {
+                // log but do not fail the transaction
+            }
 
             return toResponse(saved);
         }
@@ -212,8 +216,14 @@ public class TransactionService {
 
         transactionRepository.save(saved);
 
-        return toResponse(saved);
+        try {
+            notificationService.sendTransactionNotification(saved);
+        } catch (Exception e) {
+            // log but do not fail the transaction
         }
+
+        return toResponse(saved);
+    }
 
     public List<Transaction> listTransactions(UUID currentUserId, boolean isAdmin, int page, int size) {
         Account account = isAdmin ? null : accountRepository.findByUserId(currentUserId).orElse(null);
@@ -237,9 +247,10 @@ public class TransactionService {
         Account sender = transaction.getSenderAccount();
         if (!isAdmin && !sender.getUser().getId().equals(currentUserId)) {
             Account receiver = transaction.getReceiverAccount();
-            if (!receiver.getUser().getId().equals(currentUserId)) {
-                throw new BusinessException("Accès refusé", HttpStatus.FORBIDDEN);
+            if (receiver != null && receiver.getUser().getId().equals(currentUserId)) {
+                return transaction;
             }
+            throw new BusinessException("Accès refusé", HttpStatus.FORBIDDEN);
         }
 
         return transaction;

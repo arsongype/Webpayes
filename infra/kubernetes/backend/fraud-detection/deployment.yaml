@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-fraud-detection
+  namespace: payment-platform
+  labels:
+    app: backend-fraud-detection
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-fraud-detection
+  template:
+    metadata:
+      labels:
+        app: backend-fraud-detection
+    spec:
+      containers:
+        - name: fraud-detection-worker
+          image: payment-online/fraud-detection:1.0.0
+          ports:
+            - containerPort: 8001
+          envFrom:
+            - configMapRef:
+                name: payment-platform-config
+          env:
+            - name: PORT
+              value: "8001"
+            - name: OLLAMA_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: payment-platform-config
+                  key: OLLAMA_BASE_URL
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"

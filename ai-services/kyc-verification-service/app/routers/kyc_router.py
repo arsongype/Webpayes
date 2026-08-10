@@ -1,5 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from app.schemas.kyc_schema import KycVerificationRequest, KycVerificationResponse, KycStatusUpdate
+from app.schemas.kyc_schema import (
+    KycVerificationRequest,
+    KycVerificationResponse,
+    KycStatusUpdate,
+    AccountVerificationRequest,
+    AccountVerificationResponse,
+)
 from app.services.kyc_service import kyc_service
 
 router = APIRouter()
@@ -8,6 +14,13 @@ router = APIRouter()
 def verify_identity(request: KycVerificationRequest):
     try:
         return kyc_service.create_verification(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/verify-account", response_model=AccountVerificationResponse)
+def verify_account(request: AccountVerificationRequest):
+    try:
+        return kyc_service.verify_account(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

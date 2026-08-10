@@ -41,6 +41,11 @@ public class Account {
     @Builder.Default
     private String currency = "MGA";
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "kyc_status", nullable = false, length = 20)
+    @Builder.Default
+    private AccountKycStatus kycStatus = AccountKycStatus.NOT_VERIFIED;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
