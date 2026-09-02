@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, AlertTriangle, Shield, Clock } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Shield, Clock, Ban, CheckCircle } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 interface FraudAlert {
   transactionId: string;
@@ -15,20 +16,49 @@ interface FraudAlert {
 const FraudAlerts = () => {
   const [alerts, setAlerts] = useState<FraudAlert[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes('ADMIN');
+
+  const loadAlerts = async () => {
+    try {
+      const response = await api.get('/ai/fraud/alerts');
+      setAlerts(response.data);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadAlerts = async () => {
-      try {
-        const response = await api.get('/ai/fraud/alerts');
-        setAlerts(response.data);
-      } catch {
-        setAlerts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadAlerts();
   }, []);
+
+  const handleDismiss = async (transactionId: string) => {
+    setActionLoading(transactionId);
+    try {
+      await api.post(`/ai/fraud/alerts/${transactionId}/dismiss`);
+      setAlerts((prev) => prev.filter((a) => a.transactionId !== transactionId));
+    } catch {
+      alert('Impossible de marquer l\'alerte comme traitée.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleBlock = async (transactionId: string) => {
+    if (!confirm('Voulez-vous vraiment bloquer cette transaction ?')) return;
+    setActionLoading(transactionId);
+    try {
+      await api.post(`/ai/fraud/alerts/${transactionId}/block`);
+      setAlerts((prev) => prev.filter((a) => a.transactionId !== transactionId));
+    } catch {
+      alert('Impossible de bloquer la transaction.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const getLevelColor = (level: string) => {
     switch (level) {
@@ -90,6 +120,27 @@ const FraudAlerts = () => {
               {alert.details && Object.keys(alert.details).length > 0 && (
                 <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
                   <pre className="whitespace-pre-wrap">{JSON.stringify(alert.details, null, 2)}</pre>
+                </div>
+              )}
+
+              {isAdmin && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => handleDismiss(alert.transactionId)}
+                    disabled={actionLoading === alert.transactionId}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/15 px-4 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-500/25 disabled:opacity-50"
+                  >
+                    <CheckCircle size={16} />
+                    Marquer comme traitée
+                  </button>
+                  <button
+                    onClick={() => handleBlock(alert.transactionId)}
+                    disabled={actionLoading === alert.transactionId}
+                    className="inline-flex items-center gap-2 rounded-xl bg-red-500/15 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-500/25 disabled:opacity-50"
+                  >
+                    <Ban size={16} />
+                    Bloquer la transaction
+                  </button>
                 </div>
               )}
             </div>

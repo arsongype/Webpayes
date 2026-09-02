@@ -1,0 +1,15 @@
+-- V31__extend_user_profile.sql
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS avatar_url TEXT,
+    ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(10) DEFAULT 'fr',
+    ADD COLUMN IF NOT EXISTS timezone VARCHAR(64) DEFAULT 'Africa/Nairobi',
+    ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS last_login_ip VARCHAR(64),
+    ADD COLUMN IF NOT EXISTS failed_login_count INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS notification_email BOOLEAN NOT NULL DEFAULT TRUE,
+    ADD COLUMN IF NOT EXISTS notification_sms BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS notification_push BOOLEAN NOT NULL DEFAULT TRUE;
+
+CREATE INDEX IF NOT EXISTS idx_users_last_login ON users(last_login_at);

@@ -1,23 +1,21 @@
 import { useEffect, useState } from 'react';
-import paymentMethodService, { type PaymentMethodDTO, type PaymentMethodCategoryDTO, type PaymentMethodRequest } from '../../services/paymentMethodService';
+import paymentMethodService, { type PaymentMethodDTO, type PaymentMethodRequest } from '../../services/paymentMethodService';
 import { useAuth } from '../../hooks/useAuth';
 
 const PaymentMethods = () => {
   const { user } = useAuth();
   const [methods, setMethods] = useState<PaymentMethodDTO[]>([]);
-  const [categories, setCategories] = useState<PaymentMethodCategoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [form, setForm] = useState<PaymentMethodRequest>({ categoryId: '', type: 'CARD' });
+  const [form, setForm] = useState<PaymentMethodRequest>({ type: 'CARD' });
 
   const load = async () => {
     try {
-      const [m, c] = await Promise.all([paymentMethodService.list(), paymentMethodService.listCategories()]);
-      setMethods(m);
-      setCategories(c);
+      const data = await paymentMethodService.list();
+      setMethods(data);
     } catch {
       setError('Impossible de charger les moyens de paiement.');
     } finally {
@@ -41,7 +39,7 @@ const PaymentMethods = () => {
       }
       setShowForm(false);
       setEditingId(null);
-      setForm({ categoryId: '', type: 'CARD' });
+      setForm({ type: 'CARD' });
       load();
     } catch {
       setError('Échec de l\'opération.');
@@ -49,7 +47,7 @@ const PaymentMethods = () => {
   };
 
   const handleEdit = (method: PaymentMethodDTO) => {
-    setForm({ categoryId: method.categoryId, type: method.type, provider: method.provider, accountNumber: method.accountNumber, expiryDate: method.expiryDate, isFavorite: method.isFavorite });
+    setForm({ type: method.type, provider: method.provider, accountNumber: method.accountNumber, expiryDate: method.expiryDate, isFavorite: method.isFavorite });
     setEditingId(method.id);
     setShowForm(true);
   };
@@ -105,18 +103,6 @@ const PaymentMethods = () => {
           {showForm && (
             <form className="mb-8 rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-white/10 dark:bg-slate-800/50" onSubmit={handleSubmit}>
               <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Catégorie</label>
-                  <select
-                    value={form.categoryId}
-                    onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100"
-                    required
-                  >
-                    <option value="">Sélectionner</option>
-                    {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                </div>
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Type</label>
                   <select

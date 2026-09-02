@@ -25,6 +25,19 @@ spec:
                 name: payment-platform-config
             - secretRef:
                 name: payment-platform-secrets
+          env:
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://jaeger:4318
+            - name: OTEL_SERVICE_NAME
+              value: payment-platform-backend
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.name=payment-platform-backend,deployment.environment=prod"
+            - name: APP_ENV
+              value: prod
+            - name: TRACING_ENABLED
+              value: "true"
+            - name: TRACING_SAMPLE_RATE
+              value: "1.0"
           readinessProbe:
             tcpSocket:
               port: 8081
@@ -43,3 +56,21 @@ spec:
             limits:
               cpu: "1"
               memory: "1Gi"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: logs
+              mountPath: /app/logs
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}

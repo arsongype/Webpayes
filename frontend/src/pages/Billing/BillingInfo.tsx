@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import billingService, { type BillingInfoDTO, type BillingInfoRequest } from '../../services/billingService';
 import { useAuth } from '../../hooks/useAuth';
+import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 
 const BillingInfo = () => {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ const BillingInfo = () => {
     country: '',
     taxId: '',
   });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const load = async () => {
     try {
@@ -85,27 +87,27 @@ const BillingInfo = () => {
 
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Nom complet</label>
-              <input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100" required />
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Nom complet<RequiredAsterisk hasError={touched.fullName && !form.fullName} /></label>
+              <input value={form.fullName} onChange={(e) => { setForm({ ...form, fullName: e.target.value }); setTouched({ ...touched, fullName: true }); }} onBlur={() => setTouched({ ...touched, fullName: true })} className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 ${touched.fullName && !form.fullName ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`} required />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Adresse</label>
-              <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100" required />
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Adresse<RequiredAsterisk hasError={touched.address && !form.address} /></label>
+              <input value={form.address} onChange={(e) => { setForm({ ...form, address: e.target.value }); setTouched({ ...touched, address: true }); }} onBlur={() => setTouched({ ...touched, address: true })} className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 ${touched.address && !form.address ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`} required />
             </div>
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Ville</label>
-                <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100" required />
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Ville<RequiredAsterisk hasError={touched.city && !form.city} /></label>
+                <input value={form.city} onChange={(e) => { setForm({ ...form, city: e.target.value }); setTouched({ ...touched, city: true }); }} onBlur={() => setTouched({ ...touched, city: true })} className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 ${touched.city && !form.city ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`} required />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Code postal</label>
-                <input value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100" required />
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Code postal<RequiredAsterisk hasError={touched.postalCode && !form.postalCode} /></label>
+                <input value={form.postalCode} onChange={(e) => { setForm({ ...form, postalCode: e.target.value }); setTouched({ ...touched, postalCode: true }); }} onBlur={() => setTouched({ ...touched, postalCode: true })} className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 ${touched.postalCode && !form.postalCode ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`} required />
               </div>
             </div>
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Pays</label>
-                <input value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100" required />
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Pays<RequiredAsterisk hasError={touched.country && !form.country} /></label>
+                <input value={form.country} onChange={(e) => { setForm({ ...form, country: e.target.value }); setTouched({ ...touched, country: true }); }} onBlur={() => setTouched({ ...touched, country: true })} className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 ${touched.country && !form.country ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`} required />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Identifiant fiscal (optionnel)</label>

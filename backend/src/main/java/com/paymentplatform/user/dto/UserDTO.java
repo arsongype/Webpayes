@@ -18,7 +18,22 @@ public class UserDTO {
     private String firstName;
     private String lastName;
     private String email;
+    private String phoneNumber;
+    private String cin;
+    private Instant dateOfBirth;
+    private String nationality;
     private Role role;
     private boolean enabled;
+    private boolean emailVerified;
+    private boolean twoFactorEnabled;
+    private String avatarUrl;
+    private String preferredLanguage;
+    private String timezone;
+    private boolean notificationEmail;
+    private boolean notificationSms;
+    private boolean notificationPush;
+    private Instant lastLoginAt;
+    private String lastLoginIp;
     private Instant createdAt;
+    private Instant updatedAt;
 }

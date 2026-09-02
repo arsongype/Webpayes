@@ -18,6 +18,7 @@ import FinancialAssistant from '../pages/Assistant/FinancialAssistant';
 import KycVerification from '../pages/Assistant/KycVerification';
 import QrCode from '../pages/QR/QrCode';
 import UserProfile from '../pages/Profile/UserProfile';
+import TwoFactorSetup from '../pages/Profile/TwoFactorSetup';
 import Documentation from '../pages/Documentation';
 import Support from '../pages/Support';
 import Terms from '../pages/Terms';
@@ -26,17 +27,28 @@ import FraudAlerts from '../pages/FraudAlerts';
 import RiskDetail from '../pages/RiskDetail';
 import MerchantProfile from '../pages/Merchant/MerchantProfile';
 import MerchantRequest from '../pages/Merchant/MerchantRequest';
+import MerchantSearch from '../pages/Merchant/MerchantSearch';
+import MerchantSales from '../pages/Merchant/MerchantSales';
 import PaymentMethods from '../pages/PaymentMethods/PaymentMethods';
 import BillingInfo from '../pages/Billing/BillingInfo';
 import Refunds from '../pages/Refunds/Refunds';
 import Disputes from '../pages/Disputes/Disputes';
+import ProductList from '../pages/Product/ProductList';
+import ProductManage from '../pages/Product/ProductManage';
+import MyOrders from '../pages/Order/MyOrders';
+import MerchantOrders from '../pages/Order/MerchantOrders';
+import PaymentPage from '../pages/Payment/PaymentPage';
+import MerchantPortal from '../pages/Merchant/MerchantPortal';
+import MerchantDashboard from '../pages/Merchant/MerchantDashboard';
+import MerchantKYC from '../pages/Merchant/MerchantKYC';
+import TwoFactorSettings from '../pages/Settings/TwoFactorSettings';
 import NotFound from '../pages/Error/NotFound';
 import PrivateRoute from './PrivateRoute';
 import AdminRoute from './AdminRoute';
 
 const AppRouter = () => (
   <Routes>
-    <Route path="/" element={<Navigate to="/login" replace />} />
+    <Route path="/" element={<Navigate to="/dashboard" replace />} />
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -53,13 +65,25 @@ const AppRouter = () => (
     <Route path="/transfer" element={<PrivateRoute><TransferForm /></PrivateRoute>} />
     <Route path="/assistant" element={<PrivateRoute><FinancialAssistant /></PrivateRoute>} />
     <Route path="/kyc" element={<PrivateRoute><KycVerification /></PrivateRoute>} />
-    <Route path="/qr" element={<PrivateRoute><QrCode /></PrivateRoute>} />
+    <Route path="/qr" element={<QrCode />} />
     <Route path="/profile" element={<PrivateRoute><UserProfile /></PrivateRoute>} />
+    <Route path="/two-factor-setup" element={<PrivateRoute><TwoFactorSetup /></PrivateRoute>} />
     <Route path="/fraud-alerts" element={<PrivateRoute><FraudAlerts /></PrivateRoute>} />
     <Route path="/risk/:transactionId" element={<PrivateRoute><RiskDetail /></PrivateRoute>} />
     <Route path="/merchant/profile" element={<PrivateRoute><MerchantProfile /></PrivateRoute>} />
     <Route path="/merchant/request" element={<PrivateRoute><MerchantRequest /></PrivateRoute>} />
+    <Route path="/merchants/search" element={<PrivateRoute><MerchantSearch /></PrivateRoute>} />
+    <Route path="/merchant/sales" element={<PrivateRoute><MerchantSales /></PrivateRoute>} />
+    <Route path="/products" element={<PrivateRoute><ProductList /></PrivateRoute>} />
+    <Route path="/products/manage" element={<PrivateRoute><ProductManage /></PrivateRoute>} />
+    <Route path="/orders/my" element={<PrivateRoute><MyOrders /></PrivateRoute>} />
+    <Route path="/orders/merchant" element={<PrivateRoute><MerchantOrders /></PrivateRoute>} />
     <Route path="/payment-methods" element={<PrivateRoute><PaymentMethods /></PrivateRoute>} />
+    <Route path="/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+    <Route path="/merchant/portal" element={<PrivateRoute><MerchantPortal /></PrivateRoute>} />
+    <Route path="/merchant/dashboard" element={<PrivateRoute><MerchantDashboard /></PrivateRoute>} />
+    <Route path="/merchant/kyc" element={<PrivateRoute><MerchantKYC /></PrivateRoute>} />
+    <Route path="/settings/two-factor" element={<PrivateRoute><TwoFactorSettings /></PrivateRoute>} />
     <Route path="/billing" element={<PrivateRoute><BillingInfo /></PrivateRoute>} />
     <Route path="/refunds" element={<PrivateRoute><Refunds /></PrivateRoute>} />
     <Route path="/disputes" element={<PrivateRoute><Disputes /></PrivateRoute>} />

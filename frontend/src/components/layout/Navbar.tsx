@@ -3,8 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../context/useNotification';
-import { Sun, Moon, Menu, X, Shield, Bell, CheckCheck } from 'lucide-react';
-import { ADMIN } from '../../constants/roles.constants';
+import { Sun, Moon, Menu, X, Bell, CheckCheck } from 'lucide-react';
 
 export const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -15,6 +14,12 @@ export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const isAdmin = user?.roles?.includes('ADMIN');
+  const [adminSearch, setAdminSearch] = useState('');
+
+  const handleAdminSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+  };
 
   const handleLogout = () => {
     logout();
@@ -22,7 +27,6 @@ export const Navbar = () => {
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const isAdmin = isAuthenticated && user?.roles?.includes(ADMIN);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,38 +39,51 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { path: '/dashboard', label: 'Tableau de bord' },
-    ...(isAdmin ? [{ path: '/admin/dashboard', label: 'Admin' }] : []),
-    { path: '/wallet', label: 'Portefeuille' },
-    { path: '/transactions', label: 'Transactions' },
-    { path: '/transfer', label: 'Transfert' },
+    { path: '/payment', label: 'Paiement' },
+    { path: '/merchant/portal', label: 'Portail Marchand' },
   ];
+
+  const adminNavLinks = [
+    { path: '/admin/affiliation-requests', label: 'Demandes KYC' },
+    { path: '/admin/merchants', label: 'Marchands' },
+  ];
+  const activeNavLinks = isAdmin ? adminNavLinks : navLinks;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 shadow-sm backdrop-blur">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">
+          <Link to={isAuthenticated ? '/payment' : '/'} className="flex items-center gap-2">
             <div className="text-2xl font-bold bg-linear-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
               WebPaysh
             </div>
           </Link>
 
+          {/* Desktop Navigation */}
+           <div className="hidden md:flex items-center gap-1">
+            {activeNavLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive(link.path)
+                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
           {/* Right Side */}
           <div className="flex items-center gap-2 sm:gap-4">
-            {/* Admin badge */}
-            {isAdmin && (
-              <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-400/10 dark:text-amber-300">
-                <Shield size={14} /> Admin
-              </span>
-            )}
-
             {/* Notifications */}
             {isAuthenticated && (
               <div className="relative" ref={notifRef}>
                 <button
-                  onClick={() => { setNotifOpen((v) => !v); markAllRead(); }}
+                  onClick={() => { setNotifOpen((v) => !v); if (!notifOpen) markAllRead(); }}
                   className="relative p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
                   aria-label="Notifications"
                 >
@@ -145,11 +162,11 @@ export const Navbar = () => {
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {/* Mobile Menu Toggle (below lg) */}
+            {/* Mobile Menu Toggle (below md) */}
             {isAuthenticated && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300"
+                className="md:hidden p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300"
               >
                 {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -157,10 +174,29 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation (below lg) */}
+        {/* Mobile Navigation (below md) */}
         {mobileMenuOpen && isAuthenticated && (
-          <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 pb-4">
+          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 pb-4">
             <div className="pt-4 space-y-2">
+              {isAdmin && (
+                <form onSubmit={handleAdminSearch} className="px-4 mb-3">
+                  <div className="flex">
+                    <input
+                      type="text"
+                      value={adminSearch}
+                      onChange={(e) => setAdminSearch(e.target.value)}
+                      placeholder="Rechercher marchand..."
+                      className="flex-1 rounded-l-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-r-xl bg-cyan-500 px-3 py-2 text-white hover:bg-cyan-600 transition-colors"
+                    >
+                      <Search size={16} />
+                    </button>
+                  </div>
+                </form>
+              )}
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
@@ -179,15 +215,6 @@ export const Navbar = () => {
                 <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">
                   {user?.firstName} {user?.lastName}
                 </p>
-                {isAdmin && (
-                  <Link
-                    to="/admin/dashboard"
-                    className="block w-full mx-auto px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Administration
-                  </Link>
-                )}
                 <button
                   onClick={() => {
                     handleLogout();

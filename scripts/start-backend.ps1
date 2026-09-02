@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-$port = 8083
+$port = 8081
 $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue
 if ($conn) {
     $proc = Get-Process -Id $conn.OwningProcess -ErrorAction SilentlyContinue

@@ -32,6 +32,26 @@ public class MerchantAffiliationRequest {
     @Column(columnDefinition = "TEXT")
     private String reason;
 
+    @Column(name = "id_document_image", columnDefinition = "TEXT")
+    private String idDocumentImage;
+
+    @Column(name = "id_document_type", length = 20)
+    private String idDocumentType;
+
+    @Column(name = "id_document_number", length = 100)
+    private String idDocumentNumber;
+
+    @Column(name = "business_registration_image", columnDefinition = "TEXT")
+    private String businessRegistrationImage;
+
+    @Column(name = "kyc_status", length = 20)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private KycStatus kycStatus = KycStatus.PENDING;
+
+    @Column(name = "kyc_submitted_at")
+    private Instant kycSubmittedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default

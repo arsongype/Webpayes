@@ -81,11 +81,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback(
     async (payload: LoginPayload, options?: { redirectTo?: string; requireRole?: string[] }) => {
       const response = await authService.login(payload);
+      if (response.twoFactorRequired) {
+        throw new Error('TWO_FACTOR_REQUIRED');
+      }
       const token = extractAccessToken(response);
       if (!token) {
         throw new Error('Token JWT manquant dans la réponse de connexion');
       }
       persistToken(token);
+
+      if (response.user?.accountNumber && payload.email) {
+        saveOverrides(payload.email.toLowerCase(), {
+          accountNumber: response.user.accountNumber,
+        });
+        setUser((prev) => (prev ? { ...prev, accountNumber: response.user!.accountNumber } : prev));
+      }
+
+      if (response.twoFactorSetupRequired) {
+        navigate('/two-factor-setup');
+        return;
+      }
+
       if (options?.requireRole) {
         try {
           const decoded = jwtDecode<TokenPayload>(token);
@@ -108,16 +124,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = useCallback(
     async (payload: RegisterPayload) => {
-      const response = await authService.register(payload);
-      const token = extractAccessToken(response);
-      if (!token) {
-        throw new Error("Token JWT manquant dans la réponse d'inscription");
-      }
-      persistToken(token);
-      const redirectTo = determineRedirect(token);
-      navigate(redirectTo);
+      await authService.register(payload);
+      navigate('/login', { replace: true });
     },
-    [navigate, persistToken],
+    [navigate],
   );
 
   const loginWithGoogle = useCallback(() => {
@@ -143,6 +153,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         firstName: next.firstName,
         lastName: next.lastName,
         avatar: next.avatar,
+        accountNumber: next.accountNumber,
+        shopName: next.shopName,
       });
       return next;
     });

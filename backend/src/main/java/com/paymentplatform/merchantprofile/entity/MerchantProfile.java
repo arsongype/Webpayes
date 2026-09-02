@@ -56,6 +56,19 @@ public class MerchantProfile {
     @Builder.Default
     private MerchantProfileStatus status = MerchantProfileStatus.PENDING;
 
+    @Column(name = "kyc_status", length = 20)
+    @Builder.Default
+    private String kycStatus = "PENDING";
+
+    @Column(name = "kyc_document_hash", length = 255)
+    private String kycDocumentHash;
+
+    @Column(name = "kyc_confidence")
+    private Double kycConfidence;
+
+    @Column(name = "kyc_verified_at")
+    private Instant kycVerifiedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

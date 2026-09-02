@@ -16,4 +16,5 @@ public class RecommendationRequest {
     private String user_id;
     private List<Map<String, Object>> transaction_history;
     private Double current_balance;
+    private String currency;
 }

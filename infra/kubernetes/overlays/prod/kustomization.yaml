@@ -16,16 +16,12 @@ resources:
   - ../../backend/deployment.yaml
   - ../../backend/service.yaml
   - ../../backend/hpa.yaml
-  - ../../backend/fraud-detection/deployment.yaml
+  - ../../ai-engine/deployment.yaml
   - ../../frontend/deployment.yaml
   - ../../frontend/service.yaml
   - ../../frontend/ingress.yaml
-  - ../../ai-services/chatbot/deployment.yaml
-  - ../../ai-services/fraud-detection/deployment.yaml
-  - ../../ai-services/risk-scoring/deployment.yaml
-  - ../../ai-services/kyc-verification/deployment.yaml
-  - ../../ai-services/recommendation/deployment.yaml
-  - ../../ai-services/routing-engine/deployment.yaml
+  - production.yaml
+  - observability.yaml
 
 patches:
   - target:

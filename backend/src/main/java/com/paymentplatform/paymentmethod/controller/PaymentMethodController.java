@@ -1,13 +1,10 @@
 package com.paymentplatform.paymentmethod.controller;
 
-import com.paymentplatform.paymentmethod.dto.PaymentMethodCategoryRequestDTO;
-import com.paymentplatform.paymentmethod.dto.PaymentMethodCategoryResponseDTO;
 import com.paymentplatform.paymentmethod.dto.PaymentMethodRequestDTO;
 import com.paymentplatform.paymentmethod.dto.PaymentMethodResponseDTO;
 import com.paymentplatform.paymentmethod.service.PaymentMethodService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -49,16 +46,5 @@ public class PaymentMethodController {
     @PostMapping("/{id}/favorite")
     public ResponseEntity<PaymentMethodResponseDTO> toggleFavorite(@PathVariable UUID id) {
         return ResponseEntity.ok(paymentMethodService.toggleFavorite(id));
-    }
-
-    @GetMapping("/categories")
-    public ResponseEntity<List<PaymentMethodCategoryResponseDTO>> listCategories() {
-        return ResponseEntity.ok(paymentMethodService.listCategories());
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/categories")
-    public ResponseEntity<PaymentMethodCategoryResponseDTO> createCategory(@RequestBody PaymentMethodCategoryRequestDTO request) {
-        return ResponseEntity.ok(paymentMethodService.createCategory(request));
     }
 }

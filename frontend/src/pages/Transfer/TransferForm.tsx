@@ -7,6 +7,7 @@ import { transfer, fetchTransactions } from '../../store/slices/transactionSlice
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import Button from '../../components/common/Button/Button';
 import accountService from '../../services/accountService';
+import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 import type { AccountDTO } from '../../types/account.types';
 import type { TransferRequest } from '../../types/transaction.types';
 
@@ -166,7 +167,7 @@ const TransferForm = () => {
 
             {/* Receiver Account */}
             <div>
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">Compte destinataire</label>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">Compte destinataire<RequiredAsterisk hasError={!!errors.receiverAccountId} /></label>
               <div className="mt-2 flex gap-2">
                 <select
                   {...register('receiverOperator')}
@@ -196,7 +197,7 @@ const TransferForm = () => {
 
             {/* Amount */}
             <div>
-              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">Montant (MGA)</label>
+              <label className="block text-sm font-medium text-slate-600 dark:text-slate-300">Montant (MGA)<RequiredAsterisk hasError={!!errors.amount} /></label>
               <input
                 type="number"
                 step="0.01"

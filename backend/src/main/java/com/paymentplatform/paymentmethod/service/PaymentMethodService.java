@@ -1,14 +1,10 @@
 package com.paymentplatform.paymentmethod.service;
 
 import com.paymentplatform.common.exception.BusinessException;
-import com.paymentplatform.paymentmethod.dto.PaymentMethodCategoryRequestDTO;
-import com.paymentplatform.paymentmethod.dto.PaymentMethodCategoryResponseDTO;
 import com.paymentplatform.paymentmethod.dto.PaymentMethodRequestDTO;
 import com.paymentplatform.paymentmethod.dto.PaymentMethodResponseDTO;
 import com.paymentplatform.paymentmethod.entity.PaymentMethod;
-import com.paymentplatform.paymentmethod.entity.PaymentMethodCategory;
 import com.paymentplatform.paymentmethod.entity.PaymentMethodType;
-import com.paymentplatform.paymentmethod.repository.PaymentMethodCategoryRepository;
 import com.paymentplatform.paymentmethod.repository.PaymentMethodRepository;
 import com.paymentplatform.security.CurrentUserService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +21,6 @@ import java.util.stream.Collectors;
 public class PaymentMethodService {
 
     private final PaymentMethodRepository paymentMethodRepository;
-    private final PaymentMethodCategoryRepository paymentMethodCategoryRepository;
     private final CurrentUserService currentUserService;
 
     public List<PaymentMethodResponseDTO> listMyPaymentMethods() {
@@ -41,12 +36,9 @@ public class PaymentMethodService {
     @Transactional
     public PaymentMethodResponseDTO createPaymentMethod(PaymentMethodRequestDTO request) {
         UUID userId = currentUserService.getCurrentUserId();
-        PaymentMethodCategory category = paymentMethodCategoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new BusinessException("Catégorie introuvable", HttpStatus.NOT_FOUND));
 
         PaymentMethod method = PaymentMethod.builder()
                 .user(currentUserService.getCurrentUser())
-                .category(category)
                 .type(request.getType() != null ? request.getType() : PaymentMethodType.CARD)
                 .provider(request.getProvider())
                 .accountNumber(request.getAccountNumber())
@@ -69,11 +61,6 @@ public class PaymentMethodService {
             throw new BusinessException("Accès refusé", HttpStatus.FORBIDDEN);
         }
 
-        if (request.getCategoryId() != null) {
-            PaymentMethodCategory category = paymentMethodCategoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new BusinessException("Catégorie introuvable", HttpStatus.NOT_FOUND));
-            method.setCategory(category);
-        }
         if (request.getType() != null) method.setType(request.getType());
         if (request.getProvider() != null) method.setProvider(request.getProvider());
         if (request.getAccountNumber() != null) method.setAccountNumber(request.getAccountNumber());
@@ -113,34 +100,10 @@ public class PaymentMethodService {
         return toResponse(saved);
     }
 
-    public List<PaymentMethodCategoryResponseDTO> listCategories() {
-        return paymentMethodCategoryRepository.findAll().stream().map(this::categoryToResponse).collect(Collectors.toList());
-    }
-
-    @Transactional
-    public PaymentMethodCategoryResponseDTO createCategory(PaymentMethodCategoryRequestDTO request) {
-        PaymentMethodCategory category = PaymentMethodCategory.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .icon(request.getIcon())
-                .build();
-        PaymentMethodCategory saved = paymentMethodCategoryRepository.save(category);
-        return categoryToResponse(saved);
-    }
-
     private PaymentMethodResponseDTO toResponse(PaymentMethod method) {
-        PaymentMethodCategoryResponseDTO categoryDTO = PaymentMethodCategoryResponseDTO.builder()
-                .id(method.getCategory().getId())
-                .name(method.getCategory().getName())
-                .description(method.getCategory().getDescription())
-                .icon(method.getCategory().getIcon())
-                .createdAt(method.getCategory().getCreatedAt())
-                .build();
-
         return PaymentMethodResponseDTO.builder()
                 .id(method.getId())
                 .userId(method.getUser().getId())
-                .category(categoryDTO)
                 .type(method.getType())
                 .provider(method.getProvider())
                 .accountNumber(method.getAccountNumber())
@@ -148,16 +111,6 @@ public class PaymentMethodService {
                 .isFavorite(method.isFavorite())
                 .isActive(method.isActive())
                 .createdAt(method.getCreatedAt())
-                .build();
-    }
-
-    private PaymentMethodCategoryResponseDTO categoryToResponse(PaymentMethodCategory category) {
-        return PaymentMethodCategoryResponseDTO.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .description(category.getDescription())
-                .icon(category.getIcon())
-                .createdAt(category.getCreatedAt())
                 .build();
     }
 }

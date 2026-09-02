@@ -1,6 +1,11 @@
 # Canonical local/dev stack for the Payment Online Platform.
 # Usage:  docker compose -f infra/docker-compose/docker-compose.yml up --build
 # From repo root you can also run:  docker compose -f infra/docker-compose/docker-compose.yml up --build
+#
+# Note: All AI capabilities (fraud detection, risk scoring, KYC verification, 3DS2 exemption,
+#       dynamic routing) are exposed by a single FastAPI service: ai-engine (port 8001).
+#       The 6 legacy microservices (fraud-detection, risk-scoring, kyc-verification,
+#       chatbot, recommendation, routing-engine) have been consolidated into ai-engine.
 
 name: payment-online
 
@@ -33,28 +38,6 @@ services:
       timeout: 5s
       retries: 5
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    restart: unless-stopped
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-
-  kafka:
-    image: confluentinc/cp-kafka:7.5.0
-    restart: unless-stopped
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    ports:
-      - "9092:9092"
-
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped
@@ -62,6 +45,27 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+
+  ai-engine:
+    build:
+      context: ../../ai-engine
+      dockerfile: ../../ai-engine/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   backend:
     build:
@@ -78,22 +82,21 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-payment}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       JWT_SECRET: ${JWT_SECRET:-change_me_dev_secret_please_override_in_prod_min_32_chars}
       JWT_EXPIRATION_MS: 86400000
-      AI_FRAUD_DETECTION_URL: http://fraud-detection:8001
-      AI_RISK_SCORING_URL: http://risk-scoring:8002
-      AI_KYC_URL: http://kyc-verification:8003
-      AI_CHATBOT_URL: http://chatbot:8004
-      AI_RECOMMENDATION_URL: http://recommendation:8005
-      AI_ROUTING_URL: http://routing-engine:8006
+      AI_FRAUD_DETECTION_URL: http://ai-engine:8001
+      AI_RISK_SCORING_URL: http://ai-engine:8001
+      AI_KYC_URL: http://ai-engine:8001
+      AI_CHATBOT_URL: http://ai-engine:8001
+      AI_RECOMMENDATION_URL: http://ai-engine:8001
+      AI_ROUTING_URL: http://ai-engine:8001
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      kafka:
-        condition: service_started
+      ai-engine:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://localhost:8081/actuator/health || exit 1"]
       interval: 15s
@@ -121,71 +124,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
-
-  fraud-detection:
-    build:
-      context: ../../ai-services/fraud-detection-service
-      dockerfile: ./Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8001:8001"
-    environment:
-      PORT: 8001
-      OLLAMA_BASE_URL: http://ollama:11434
-
-  risk-scoring:
-    build:
-      context: ../../ai-services/risk-scoring-service
-      dockerfile: ./Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8002:8002"
-    environment:
-      PORT: 8002
-
-  kyc-verification:
-    build:
-      context: ../../ai-services/kyc-verification-service
-      dockerfile: ./Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8003:8003"
-    environment:
-      PORT: 8003
-      OLLAMA_BASE_URL: http://ollama:11434
-
-  chatbot:
-    build:
-      context: ../../ai-services/chatbot-service
-      dockerfile: ./Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8004:8004"
-    environment:
-      PORT: 8004
-      OLLAMA_BASE_URL: http://ollama:11434
-    depends_on:
-      - ollama
-
-  recommendation:
-    build:
-      context: ../../ai-services/recommendation-service
-      dockerfile: ./Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8005:8005"
-    environment:
-      PORT: 8005
-
-  routing-engine:
-    build:
-      context: ../../ai-services/routing-engine-service
-      dockerfile: ./Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8006:8006"
-    environment:
-      PORT: 8006
 
   prometheus:
     image: prom/prometheus:latest

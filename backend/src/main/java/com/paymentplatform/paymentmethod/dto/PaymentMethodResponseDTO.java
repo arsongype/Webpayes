@@ -1,6 +1,5 @@
 package com.paymentplatform.paymentmethod.dto;
 
-import com.paymentplatform.paymentmethod.dto.PaymentMethodCategoryResponseDTO;
 import com.paymentplatform.paymentmethod.entity.PaymentMethodType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +16,6 @@ import java.util.UUID;
 public class PaymentMethodResponseDTO {
     private UUID id;
     private UUID userId;
-    private PaymentMethodCategoryResponseDTO category;
     private PaymentMethodType type;
     private String provider;
     private String accountNumber;

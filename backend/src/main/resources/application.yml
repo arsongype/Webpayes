@@ -9,13 +9,26 @@ spring:
     endpoints:
       web:
         exposure:
-          include: health,info,prometheus
+          include: health,info,prometheus,metrics,caches,scheduledtasks
     endpoint:
       health:
         show-details: when_authorized
     metrics:
       tags:
         application: ${spring.application.name}
+        environment: ${APP_ENV:dev}
+    tracing:
+      sampling:
+        probability: ${TRACING_SAMPLE_RATE:1.0}
+      enabled: ${TRACING_ENABLED:true}
+    otlp:
+      tracing:
+        endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+        timeout: 10s
+      metrics:
+        endpoint: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:http://localhost:4318/v1/metrics}
+        enabled: ${OTLP_METRICS_ENABLED:false}
+        step: 30s
 
   thymeleaf:
     check-template-location: false
@@ -56,6 +69,12 @@ spring:
     redis:
       host: ${SPRING_REDIS_HOST:localhost}
       port: ${SPRING_REDIS_PORT:6379}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
   security:
     oauth2:
@@ -68,22 +87,18 @@ spring:
               - email
               - profile
 
-  ai:
-    fraud-detection:
-      url: ${AI_FRAUD_DETECTION_URL:http://localhost:8001}
-    risk-scoring:
-      url: ${AI_RISK_SCORING_URL:http://localhost:8002}
-    kyc:
-      url: ${AI_KYC_URL:http://localhost:8003}
-    chatbot:
-      url: ${AI_CHATBOT_URL:http://localhost:8004}
-    recommendation:
-      url: ${AI_RECOMMENDATION_URL:http://localhost:8005}
-    routing:
-      url: ${AI_ROUTING_URL:http://localhost:8006}
+ai:
+  kyc:
+    url: ${AI_KYC_URL:http://127.0.0.1:8001}
+  fraud-detection:
+    url: ${AI_FRAUD_DETECTION_URL:http://127.0.0.1:8001}
+  risk-scoring:
+    url: ${AI_RISK_SCORING_URL:http://127.0.0.1:8001}
+  routing:
+    url: ${AI_ROUTING_URL:http://127.0.0.1:8001}
 
 server:
-  port: ${SERVER_PORT:8081}
+  port: 8081
 
 jwt:
   secret: ${JWT_SECRET:changeme_dev_secret_please_override_in_prod_min_32_chars}
@@ -97,3 +112,22 @@ logging:
   level:
     com.paymentplatform: DEBUG
     org.springframework.security: INFO
+
+# --- Payment Gateway Configuration ---
+payment:
+  gateway:
+    mode: ${PAYMENT_GATEWAY_MODE:mock}
+    stripe:
+      api-key: ${STRIPE_API_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    orange-money:
+      api-url: ${ORANGE_MONEY_API_URL:https://api.orange.com}
+      client-id: ${ORANGE_MONEY_CLIENT_ID:}
+      client-secret: ${ORANGE_MONEY_CLIENT_SECRET:}
+      merchant-key: ${ORANGE_MONEY_MERCHANT_KEY:}
+    mock:
+      simulate-success: ${MOCK_PAYMENT_SUCCESS:true}
+
+  fraud:
+    block-threshold: ${PAYMENT_FRAUD_BLOCK_THRESHOLD:0.8}
+    challenge-threshold: ${PAYMENT_FRAUD_CHALLENGE_THRESHOLD:0.5}

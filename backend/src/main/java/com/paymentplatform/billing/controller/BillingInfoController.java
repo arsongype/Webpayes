@@ -44,7 +44,7 @@ public class BillingInfoController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<BillingInfoResponseDTO> getById(@PathVariable UUID id) {
-        return billingInfoService.getMyBillingInfo()
+        return billingInfoService.getById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

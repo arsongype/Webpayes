@@ -17,7 +17,7 @@ public class KycClient {
 
     private final WebClient.Builder webClientBuilder;
 
-    @Value("${ai.kyc.url:http://localhost:8003}")
+    @Value("${ai.kyc.url:http://127.0.0.1:8001}")
     private String kycUrl;
 
     public KycVerificationResponse verify(@NonNull KycVerificationRequest request) {

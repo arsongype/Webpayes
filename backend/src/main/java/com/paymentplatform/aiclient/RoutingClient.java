@@ -17,7 +17,7 @@ public class RoutingClient {
 
     private final WebClient.Builder webClientBuilder;
 
-    @Value("${ai.routing.url:http://localhost:8006}")
+    @Value("${ai.routing.url:http://127.0.0.1:8001}")
     private String routingUrl;
 
     public RoutingResponse getBestChannel(@NonNull RoutingRequest request) {
@@ -28,8 +28,7 @@ public class RoutingClient {
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono(RoutingResponse.class)
-                    .timeout(Duration.ofSeconds(10))
-                    .retryWhen(Retry.fixedDelay(1, Duration.ofSeconds(1)))
+                     .timeout(Duration.ofSeconds(15))
                     .onErrorResume(e -> Mono.empty())
                     .block();
         } catch (Exception e) {
@@ -37,3 +36,4 @@ public class RoutingClient {
         }
     }
 }
+

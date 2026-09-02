@@ -3,6 +3,7 @@ package com.paymentplatform.wallet.service;
 import com.paymentplatform.account.entity.Account;
 import com.paymentplatform.account.repository.AccountRepository;
 import com.paymentplatform.common.exception.BusinessException;
+import com.paymentplatform.security.CurrentUserService;
 import com.paymentplatform.wallet.WalletTransactionType;
 import com.paymentplatform.wallet.dto.WalletTransactionDTO;
 import com.paymentplatform.wallet.entity.WalletTransaction;

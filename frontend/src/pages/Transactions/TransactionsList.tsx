@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Search, RefreshCw } from 'lucide-react';
 import { fetchTransactions } from '../../store/slices/transactionSlice';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import Button from '../../components/common/Button/Button';
+import api from '../../services/api';
 
 const formatCurrency = (value: string, currency: string = 'MGA') => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(Number(value));
@@ -14,10 +16,10 @@ const formatDate = (date: string) => {
 
 const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
-    PENDING: 'bg-yellow-500/20 text-yellow-200 border-yellow-400/30',
-    COMPLETED: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
-    FAILED: 'bg-red-500/20 text-red-200 border-red-400/30',
-    CANCELLED: 'bg-slate-500/20 text-slate-200 border-slate-400/30',
+    PENDING: 'bg-yellow-500/20 text-yellow-200',
+    COMPLETED: 'bg-emerald-500/20 text-emerald-2000',
+    FAILED: 'bg-red-500/20 text-red-200',
+    CANCELLED: 'bg-slate-500/20 text-slate-200',
   };
   const labels: Record<string, string> = {
     PENDING: 'En attente',
@@ -35,18 +37,29 @@ const getStatusBadge = (status: string) => {
 const TransactionsList = () => {
   const dispatch = useAppDispatch();
   const { transactions, loading, error } = useAppSelector((state) => state.transactions);
+  const [searchReference, setSearchReference] = useState('');
+  const [searchResults, setSearchResults] = useState<any[] | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchTransactions({ page: 0, size: 20 }));
   }, [dispatch]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
-      </div>
-    );
-  }
+  const handleSearch = async () => {
+    if (!searchReference.trim()) return;
+    setSearchLoading(true);
+    setSearchResults(null);
+    try {
+      const response = await api.get(`/transactions/search?reference=${encodeURIComponent(searchReference.trim())}`);
+      setSearchResults(response.data);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const displayList = searchResults ?? transactions;
 
   return (
     <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-50">
@@ -67,6 +80,25 @@ const TransactionsList = () => {
           </div>
         )}
 
+        <div className="mb-6 flex gap-2">
+          <input
+            type="text"
+            value={searchReference}
+            onChange={(e) => setSearchReference(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="Rechercher par référence..."
+            className="flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-cyan-400"
+          />
+          <Button variant="secondary" onClick={handleSearch} isLoading={searchLoading}>
+            <Search size={16} />
+          </Button>
+          {searchResults && (
+            <Button variant="secondary" onClick={() => { setSearchResults(null); setSearchReference(''); }}>
+              <RefreshCw size={16} />
+            </Button>
+          )}
+        </div>
+
         <div className="overflow-hidden rounded-4xl border border-slate-200 bg-white/80 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-white/10">
@@ -80,14 +112,14 @@ const TransactionsList = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-                {transactions.length === 0 ? (
+                {displayList.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                       Aucune transaction
                     </td>
                   </tr>
                 ) : (
-                  transactions.map((tx) => (
+                  displayList.map((tx: any) => (
                     <tr key={tx.id} className="transition hover:bg-slate-50 dark:hover:bg-white/5">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-mono text-cyan-600 dark:text-cyan-200">{tx.reference}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import aiService from '../../services/aiService';
+import { useAuth } from '../../hooks/useAuth';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -8,10 +9,11 @@ interface Message {
 }
 
 const FinancialAssistant = () => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Bonjour ! Je suis votre assistant financier IA. Comment puis-je vous aider aujourd\'hui ?',
+      content: `Bonjour ${user?.firstName ?? ''} ! Je suis votre assistant financier IA. Comment puis-je vous aider ?`,
       timestamp: new Date(),
     },
   ]);

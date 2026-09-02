@@ -102,6 +102,16 @@ public class QrCodeService {
         return qrData.substring(QR_PREFIX.length());
     }
 
+    public String generateQrDataUrl(String data) {
+        return generateQrImage(data);
+    }
+
+    public byte[] generateQrPngBytes(String data) {
+        String dataUrl = generateQrImage(data);
+        String base64 = dataUrl.split(",")[1];
+        return Base64.getDecoder().decode(base64);
+    }
+
     private String generateQrImage(String data) {
         try {
             Map<EncodeHintType, Object> hints = new HashMap<>();

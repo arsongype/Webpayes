@@ -34,7 +34,7 @@ const AdminDashboard = () => {
             Bienvenue, {user?.firstName ?? 'Admin'}
           </h1>
           <p className="mt-4 max-w-2xl text-slate-500 dark:text-slate-300">
-            Panneau d'administration — Gérez les utilisateurs, les comptes et surveillez l'activité de la plateforme.
+            Panneau d'administration Gérez les utilisateurs, les comptes et surveillez l'activité de la plateforme.
           </p>
 
           <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">

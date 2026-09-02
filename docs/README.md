@@ -6,7 +6,7 @@ Plateforme de paiement en ligne (MGA) avec architecture monorepo.
 
 - **backend/** : API REST Spring Boot 3 (Java 21), sécurité JWT, Flyway.
 - **frontend/** : SPA React + TypeScript + Vite.
-- **ai-services/** : microservices Python/FastAPI (fraude, risque, KYC, chatbot, recommandation, routage).
+- **ai-engine/** : service IA unifié Python/FastAPI (fraude, risque, KYC, exemption 3DS2, routage dynamique).
 - **infra/** : Docker Compose, Kubernetes (kustomize), monitoring (Prometheus/Grafana).
 - **load-tests/** : tests de charge (k6).
 

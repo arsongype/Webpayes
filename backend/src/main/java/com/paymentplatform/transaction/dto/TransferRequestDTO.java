@@ -1,5 +1,6 @@
 package com.paymentplatform.transaction.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TransferRequestDTO {
     @NotNull(message = "L'identifiant du compte émetteur est requis")
     private String senderAccountId;
@@ -31,6 +33,9 @@ public class TransferRequestDTO {
 
     @Size(max = 255, message = "La description ne peut pas dépasser 255 caractères")
     private String description;
+
+    @Size(min = 6, max = 6, message = "Le code 2FA doit être sur 6 chiffres")
+    private String twoFactorCode;
 
     // Backwards-compatible constructor for tests and older callers that passed receiver as UUID
     public TransferRequestDTO(java.util.UUID senderAccountId, java.util.UUID receiverAccountId, java.math.BigDecimal amount, String description) {

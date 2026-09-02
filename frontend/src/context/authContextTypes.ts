@@ -11,6 +11,8 @@ export type TokenPayload = {
 export type AuthUser = TokenPayload & {
   token: string;
   avatar?: string;
+  accountNumber?: string;
+  shopName?: string;
 };
 
 export interface AuthContextType {

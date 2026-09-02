@@ -50,6 +50,7 @@ class TransactionServiceTest {
                 ledgerService,
                 currentUserService,
                 walletService,
+                mock(com.paymentplatform.auth.twofactor.TwoFactorService.class),
                 fraudClient,
                 riskClient,
                 mock(com.paymentplatform.operator.OperatorClientRegistry.class),

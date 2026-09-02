@@ -14,17 +14,8 @@ services:
   frontend:
     profiles: ["test"]
 
-  fraud-detection:
+  ai-engine:
     profiles: ["test"]
-  risk-scoring:
-    profiles: ["test"]
-  kyc-verification:
-    profiles: ["test"]
-  chatbot:
-    profiles: ["test"]
-  recommendation:
-    profiles: ["test"]
-  routing-engine:
-    profiles: ["test"]
+
   ollama:
     profiles: ["test"]

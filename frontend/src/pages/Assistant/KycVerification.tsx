@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import api from '../../services/api';
+import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
+import { useAuth } from '../../hooks/useAuth';
 import type { KycVerificationResponse, KycStatus } from '../../types/kyc.types';
 
 const KycVerification = () => {
+  const { user } = useAuth();
   const [form, setForm] = useState({
     full_name: '',
     date_of_birth: '',
@@ -12,6 +15,7 @@ const KycVerification = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<KycVerificationResponse | null>(null);
   const [error, setError] = useState('');
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +34,7 @@ const KycVerification = () => {
       }
 
       const payload = {
-        user_id: 'current-user',
+        user_id: user?.sub ?? 'current-user',
         id_document_image: imageBase64,
         ...form,
       };
@@ -60,43 +64,47 @@ const KycVerification = () => {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
           <div>
-            <label className="block text-sm font-medium">Nom complet</label>
+            <label className="block text-sm font-medium">Nom complet<RequiredAsterisk hasError={touched.full_name && !form.full_name} /></label>
             <input
               type="text"
               required
               value={form.full_name}
-              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-              className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100"
+              onChange={(e) => { setForm({ ...form, full_name: e.target.value }); setTouched({ ...touched, full_name: true }); }}
+              onBlur={() => setTouched({ ...touched, full_name: true })}
+              className={`mt-1 w-full rounded-2xl border bg-white px-4 py-3 dark:bg-slate-800/80 dark:text-slate-100 ${touched.full_name && !form.full_name ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Date de naissance</label>
+            <label className="block text-sm font-medium">Date de naissance<RequiredAsterisk hasError={touched.date_of_birth && !form.date_of_birth} /></label>
             <input
               type="date"
               required
               value={form.date_of_birth}
-              onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
-              className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100"
+              onChange={(e) => { setForm({ ...form, date_of_birth: e.target.value }); setTouched({ ...touched, date_of_birth: true }); }}
+              onBlur={() => setTouched({ ...touched, date_of_birth: true })}
+              className={`mt-1 w-full rounded-2xl border bg-white px-4 py-3 dark:bg-slate-800/80 dark:text-slate-100 ${touched.date_of_birth && !form.date_of_birth ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Nationalité</label>
+            <label className="block text-sm font-medium">Nationalité<RequiredAsterisk hasError={touched.nationality && !form.nationality} /></label>
             <input
               type="text"
               required
               value={form.nationality}
-              onChange={(e) => setForm({ ...form, nationality: e.target.value })}
-              className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100"
+              onChange={(e) => { setForm({ ...form, nationality: e.target.value }); setTouched({ ...touched, nationality: true }); }}
+              onBlur={() => setTouched({ ...touched, nationality: true })}
+              className={`mt-1 w-full rounded-2xl border bg-white px-4 py-3 dark:bg-slate-800/80 dark:text-slate-100 ${touched.nationality && !form.nationality ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium">Pièce d'identité (image)</label>
+            <label className="block text-sm font-medium">Pièce d'identité (image)<RequiredAsterisk hasError={!file} /></label>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               className="mt-1 block w-full text-sm"
             />
+            {!file && touched.file && <p className="mt-1 text-sm text-red-500">Ce champ est requis</p>}
           </div>
           <button
             type="submit"

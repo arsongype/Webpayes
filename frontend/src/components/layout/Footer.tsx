@@ -1,12 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Heart, Mail, QrCode, Bot, User, Shield, Users } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { ADMIN } from '../../constants/roles.constants';
+import { Heart, Mail } from 'lucide-react';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const { user } = useAuth();
-  const isAdmin = user?.roles?.includes(ADMIN);
 
   return (
     <footer className="mt-auto border-t border-slate-200 bg-white pb-6 dark:border-slate-800 dark:bg-slate-900 sm:pb-8 lg:pb-8">
@@ -27,33 +23,13 @@ export const Footer = () => {
             <h4 className="mb-4 font-semibold text-slate-900 dark:text-white">Rapides</h4>
             <ul className="space-y-2">
               <li>
-                <Link to="/dashboard" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                  Tableau de bord
+                <Link to="/payment" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
+                  Paiement
                 </Link>
               </li>
               <li>
-                <Link to="/transactions" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                  Transactions
-                </Link>
-              </li>
-              <li>
-                <Link to="/transfer" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                  Transfert
-                </Link>
-              </li>
-              <li>
-                <Link to="/wallet" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                  Portefeuille
-                </Link>
-              </li>
-              <li>
-                <Link to="/qr" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                  QR Code
-                </Link>
-              </li>
-              <li>
-                <Link to="/assistant" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                  Assistant IA
+                <Link to="/merchant/portal" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
+                  Portail Marchand
                 </Link>
               </li>
               <li>
@@ -61,20 +37,6 @@ export const Footer = () => {
                   Profil
                 </Link>
               </li>
-              {isAdmin && (
-                <li>
-                  <Link to="/admin/dashboard" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                    Administration
-                  </Link>
-                </li>
-              )}
-              {isAdmin && (
-                <li>
-                  <Link to="/admin/users" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">
-                    Utilisateurs
-                  </Link>
-                </li>
-              )}
             </ul>
           </div>
 
@@ -107,7 +69,7 @@ export const Footer = () => {
 
           {/* Social Links */}
           <div className="text-center sm:text-left">
-            <h4 className="mb-4 font-semibold text-slate-900 dark:text-white">Suivez-nous</h4>
+            <h4 className="mb-4 font-semibold text-slate-900 dark:text-white">Contact</h4>
             <div className="flex justify-center gap-4 sm:justify-start">
               <a
                 href="mailto:contact@webpaysh.com"

@@ -3,6 +3,7 @@ package com.paymentplatform.merchantaffiliation.controller;
 import com.paymentplatform.merchantaffiliation.dto.MerchantAffiliationRequestRequestDTO;
 import com.paymentplatform.merchantaffiliation.dto.MerchantAffiliationRequestResponseDTO;
 import com.paymentplatform.merchantaffiliation.entity.AffiliationRequestStatus;
+import com.paymentplatform.merchantaffiliation.entity.KycStatus;
 import com.paymentplatform.merchantaffiliation.service.MerchantAffiliationRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,12 @@ public class MerchantAffiliationRequestController {
     @GetMapping
     public ResponseEntity<List<MerchantAffiliationRequestResponseDTO>> listAll() {
         return ResponseEntity.ok(affiliationRequestService.listAll());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/page")
+    public ResponseEntity<Page<MerchantAffiliationRequestResponseDTO>> listAllPaginated(Pageable pageable) {
+        return ResponseEntity.ok(affiliationRequestService.listAllPaginated(pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -55,5 +62,11 @@ public class MerchantAffiliationRequestController {
     @PostMapping("/{id}/reject")
     public ResponseEntity<MerchantAffiliationRequestResponseDTO> reject(@PathVariable UUID id) {
         return ResponseEntity.ok(affiliationRequestService.reject(id));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/{id}/verify-kyc")
+    public ResponseEntity<MerchantAffiliationRequestResponseDTO> verifyKyc(@PathVariable UUID id, @RequestParam KycStatus status) {
+        return ResponseEntity.ok(affiliationRequestService.verifyKyc(id, status));
     }
 }

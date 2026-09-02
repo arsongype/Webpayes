@@ -40,6 +40,15 @@ public class CurrentUserService {
                 .orElseThrow(() -> new BusinessException("Utilisateur introuvable", HttpStatus.UNAUTHORIZED));
     }
 
+    public String getCurrentUserEmail() {
+        Authentication authentication = getAuthentication();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserDetails userDetails)) {
+            throw new BusinessException("Utilisateur non authentifié", HttpStatus.UNAUTHORIZED);
+        }
+        return userDetails.getUsername();
+    }
+
     private Authentication getAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

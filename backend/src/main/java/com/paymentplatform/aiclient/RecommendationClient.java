@@ -17,7 +17,7 @@ public class RecommendationClient {
 
     private final WebClient.Builder webClientBuilder;
 
-    @Value("${ai.recommendation.url:http://localhost:8005}")
+    @Value("${ai.recommendation.url:http://127.0.0.1:8001}")
     private String recommendationUrl;
 
     public RecommendationResponse analyze(@NonNull RecommendationRequest request) {

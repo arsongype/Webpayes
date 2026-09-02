@@ -1,16 +1,26 @@
 import { useEffect, useState } from 'react';
-import merchantService, { type MerchantAffiliationRequestDTO } from '../../services/merchantService';
+import merchantService, { type MerchantAffiliationRequestDTO, type MerchantAffiliationRequestPageDTO } from '../../services/merchantService';
+import { Eye, Shield, FileText, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AdminAffiliationRequests = () => {
   const [requests, setRequests] = useState<MerchantAffiliationRequestDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const load = async () => {
+  const load = async (p = 0) => {
+    setLoading(true);
     try {
-      const data = await merchantService.listRequests();
-      setRequests(data);
+      const data: MerchantAffiliationRequestPageDTO = await merchantService.listRequestsPaginated(p, 5);
+      setRequests(data.content);
+      setPage(data.number);
+      setTotalPages(data.totalPages);
+      setTotalElements(data.totalElements);
     } catch {
       setError('Impossible de charger les demandes.');
     } finally {
@@ -40,71 +50,194 @@ const AdminAffiliationRequests = () => {
     }
   };
 
+  const handleVerifyKyc = async (id: string, status: string) => {
+    try {
+      await merchantService.verifyKyc(id, status);
+      setSuccess(`KYC ${status === 'VERIFIED' ? 'vérifié' : 'rejeté'}.`);
+      load();
+    } catch {
+      setError('Échec de la vérification KYC.');
+    }
+  };
+
   const statusColor = (s: string) => s === 'APPROVED' ? 'emerald' : s === 'REJECTED' ? 'rose' : 'amber';
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="rounded-4xl border border-slate-200 bg-white/80 p-8 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-          <p className="text-sm uppercase tracking-[0.3em] text-cyan-600/80 dark:text-cyan-300/80">Admin</p>
-          <h1 className="mt-2 text-3xl font-semibold">Demandes d'affiliation marchand</h1>
-
-          {error && (
-            <div className="mt-6 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-200" role="alert">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-200" role="status">
-              {success}
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
-            </div>
-          ) : requests.length === 0 ? (
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-8 text-center dark:border-white/10 dark:bg-slate-800/50">
-              <p className="text-slate-500 dark:text-slate-400">Aucune demande.</p>
-            </div>
-          ) : (
-            <div className="mt-8 overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/10">
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Utilisateur</th>
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Motif</th>
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Statut</th>
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-                  {requests.map((r) => (
-                    <tr key={r.id}>
-                      <td className="py-4 font-medium text-slate-900 dark:text-white">{r.userId}</td>
-                      <td className="py-4 text-slate-500 dark:text-slate-400">{r.reason || '—'}</td>
-                      <td className="py-4">
-                        <span className={`inline-flex items-center rounded-full bg-${statusColor(r.status)}-500/15 px-3 py-1 text-xs font-medium text-${statusColor(r.status)}-600 dark:text-${statusColor(r.status)}-300`}>
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        {r.status !== 'APPROVED' && (
-                          <button onClick={() => handleApprove(r.id)} className="mr-2 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300">Approuver</button>
-                        )}
-                        {r.status !== 'REJECTED' && (
-                          <button onClick={() => handleReject(r.id)} className="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-medium text-rose-600 dark:text-rose-300">Rejeter</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900 dark:bg-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-center gap-3">
+          <Shield className="h-8 w-8 text-cyan-600" />
+          <div>
+            <h1 className="text-3xl font-semibold">Demandes d'affiliation marchand</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Vérifiez les documents KYC et approuvez les profils marchands.
+            </p>
+          </div>
         </div>
+
+        {error && (
+          <div className="mb-6 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:text-rose-200">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-600 dark:text-emerald-200">
+            {success}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-12 text-center dark:border-white/10 dark:bg-slate-800/50">
+            <FileText className="mx-auto mb-4 h-12 w-12 text-slate-400" />
+            <p className="text-slate-500 dark:text-slate-400">Aucune demande pour le moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {requests.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow dark:border-white/10 dark:bg-slate-900"
+              >
+                <div className="mb-4 flex items-start justify-between">
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-slate-900 dark:text-white">
+                      {r.userFirstName} {r.userLastName}
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{r.userEmail}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">ID utilisateur: {r.userId}</p>
+                  </div>
+                  <span className={`inline-flex items-center rounded-full bg-${statusColor(r.status)}-500/15 px-3 py-1 text-xs font-medium text-${statusColor(r.status)}-600 dark:text-${statusColor(r.status)}-300`}>
+                    {r.status}
+                  </span>
+                </div>
+
+                {r.reason && (
+                  <div className="mb-3 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800/50">
+                    <span className="font-medium text-slate-600 dark:text-slate-400">Motif:</span> {r.reason}
+                  </div>
+                )}
+
+                <div className="mb-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Statut KYC:</span>
+                    <span className={`font-medium text-${statusColor(r.kycStatus || 'PENDING')}-600 dark:text-${statusColor(r.kycStatus || 'PENDING')}-300`}>
+                      {r.kycStatus || 'PENDING'}
+                    </span>
+                  </div>
+                  {r.idDocumentType && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 dark:text-slate-400">Pièce d'identité:</span>
+                      <span className="text-slate-900 dark:text-white">{r.idDocumentType} • {r.idDocumentNumber}</span>
+                    </div>
+                  )}
+                  {r.kycSubmittedAt && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 dark:text-slate-400">Soumis le:</span>
+                      <span className="text-slate-900 dark:text-white">
+                        {new Date(r.kycSubmittedAt).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Créé le:</span>
+                    <span className="text-slate-900 dark:text-white">
+                      {r.createdAt && new Date(r.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {r.idDocumentImage && (
+                  <button
+                    onClick={() => { setSelectedDoc(r.idDocumentImage!); setShowDocModal(true); }}
+                    className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 dark:border-white/10 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <Eye size={18} />
+                    Voir le document d'identité
+                  </button>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {r.kycStatus !== 'VERIFIED' && (
+                    <>
+                      <button
+                        onClick={() => handleVerifyKyc(r.id, 'VERIFIED')}
+                        className="flex-1 rounded-full bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-600 dark:text-emerald-300"
+                      >
+                        Vérifier KYC
+                      </button>
+                      <button
+                        onClick={() => handleVerifyKyc(r.id, 'REJECTED')}
+                        className="flex-1 rounded-full bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-300"
+                      >
+                        Rejeter KYC
+                      </button>
+                    </>
+                  )}
+                  {r.status !== 'APPROVED' && r.kycStatus === 'VERIFIED' && (
+                    <button
+                      onClick={() => handleApprove(r.id)}
+                      className="flex-1 rounded-full bg-amber-500/15 px-3 py-2 text-xs font-medium text-amber-600 dark:text-amber-300"
+                    >
+                      Approuver la demande
+                    </button>
+                  )}
+                  {r.status !== 'REJECTED' && (
+                    <button
+                      onClick={() => handleReject(r.id)}
+                      className="flex-1 rounded-full bg-rose-500/15 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-300"
+                    >
+                      Rejeter
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {totalPages > 1 && !loading && (
+          <div className="mt-6 flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
+            <span>{totalElements} demande(s) — page {page + 1} sur {totalPages}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => load(page - 1)}
+                disabled={page === 0}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-1 dark:border-white/10 dark:bg-slate-800"
+              >
+                <ChevronLeft size={14} /> Précédent
+              </button>
+              <button
+                onClick={() => load(page + 1)}
+                disabled={page >= totalPages - 1}
+                className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-1 dark:border-white/10 dark:bg-slate-800"
+              >
+                Suivant <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {showDocModal && selectedDoc && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowDocModal(false)}>
+          <div className="max-w-3xl rounded-2xl bg-white p-4 dark:bg-slate-900" onClick={e => e.stopPropagation()}>
+            <img
+              src={selectedDoc.startsWith('data:image') ? selectedDoc : `data:image/png;base64,${selectedDoc}`}
+              alt="KYC Document"
+              className="max-h-[80vh] w-full object-contain"
+            />
+            <button
+              onClick={() => setShowDocModal(false)}
+              className="mt-2 w-full rounded-xl bg-slate-200 py-2 text-sm font-medium dark:bg-slate-700"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,7 @@
 package com.paymentplatform.aiclient;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,9 +13,11 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class FraudDetectionResponse {
     private String transactionId;
-    private boolean isFraudulent;
+    @JsonProperty("isFraudulent")
+    private boolean fraudulent;
     private double fraudScore;
     private String riskLevel;
     private String recommendation;

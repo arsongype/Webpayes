@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import merchantService, { type MerchantProfileDTO, type MerchantProfileRequest } from '../../services/merchantService';
 import { useAuth } from '../../hooks/useAuth';
+import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 
 const MerchantProfile = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<MerchantProfileDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -20,6 +22,7 @@ const MerchantProfile = () => {
     bankAccountNumber: '',
     bankName: '',
   });
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const load = async () => {
@@ -45,6 +48,22 @@ const MerchantProfile = () => {
     };
     load();
   }, []);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      setForm({ ...form, logoUrl: base64 });
+    } catch {
+      setError('Impossible de charger l\'image.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,20 +129,22 @@ const MerchantProfile = () => {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Nom de la boutique</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Nom de la boutique<RequiredAsterisk hasError={touched.shopName && !form.shopName} /></label>
                   <input
                     value={form.shopName}
-                    onChange={(e) => setForm({ ...form, shopName: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-cyan-400"
+                    onChange={(e) => { setForm({ ...form, shopName: e.target.value }); setTouched({ ...touched, shopName: true }); }}
+                    onBlur={() => setTouched({ ...touched, shopName: true })}
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-cyan-400 ${touched.shopName && !form.shopName ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`}
                     required
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Téléphone</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Téléphone<RequiredAsterisk hasError={touched.phoneNumber && !form.phoneNumber} /></label>
                   <input
                     value={form.phoneNumber}
-                    onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })}
-                    className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-cyan-400"
+                    onChange={(e) => { setForm({ ...form, phoneNumber: e.target.value }); setTouched({ ...touched, phoneNumber: true }); }}
+                    onBlur={() => setTouched({ ...touched, phoneNumber: true })}
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-cyan-400 ${touched.phoneNumber && !form.phoneNumber ? 'border-red-500 dark:border-red-400' : 'border-slate-300 dark:border-white/10'}`}
                     required
                   />
                 </div>
@@ -140,12 +161,17 @@ const MerchantProfile = () => {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">URL du logo</label>
+                <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Logo</label>
                 <input
-                  value={form.logoUrl}
-                  onChange={(e) => setForm({ ...form, logoUrl: e.target.value })}
-                  className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-100 dark:focus:border-cyan-400"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="mb-2 block w-full text-sm text-slate-500 dark:text-slate-400"
                 />
+                {form.logoUrl && (
+                  <img src={form.logoUrl} alt="Logo preview" className="mt-2 h-24 w-24 rounded-xl object-cover border border-slate-200 dark:border-white/10" />
+                )}
               </div>
 
               <div>

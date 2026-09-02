@@ -12,6 +12,11 @@ const transactionService = {
     return response.data as Transaction[];
   },
 
+  search: async (reference: string): Promise<Transaction[]> => {
+    const response = await api.get(`/transactions/search?reference=${encodeURIComponent(reference)}`);
+    return response.data as Transaction[];
+  },
+
   getById: async (id: string): Promise<Transaction> => {
     const response = await api.get(`/transactions/${id}`);
     return response.data as Transaction;
@@ -20,6 +25,11 @@ const transactionService = {
   getStats: async (): Promise<{ total: number; completed: number; pending: number }> => {
     const response = await api.get('/transactions/stats');
     return response.data as { total: number; completed: number; pending: number };
+  },
+
+  getMerchantSales: async (): Promise<{ total: number; count: number; from: string; to: string }> => {
+    const response = await api.get('/transactions/merchant/sales');
+    return response.data;
   },
 };
 

@@ -38,6 +38,18 @@ public class MerchantProfileService {
         return merchantProfileRepository.findByStatus(status, pageable).map(this::toResponse);
     }
 
+    public List<MerchantProfileResponseDTO> searchPublic(String query) {
+        String q = query == null ? "" : query.trim();
+        MerchantProfileStatus status = MerchantProfileStatus.APPROVED;
+        if (q.isBlank()) {
+            return merchantProfileRepository.findByStatus(status, org.springframework.data.domain.PageRequest.of(0, 50)).getContent().stream()
+                    .map(this::toResponse).collect(java.util.stream.Collectors.toList());
+        }
+        return merchantProfileRepository.findByShopNameContainingIgnoreCaseAndStatus(q, status).stream()
+                .map(this::toResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public Optional<MerchantProfileResponseDTO> getMyProfile() {
         UUID userId = currentUserService.getCurrentUserId();
         return merchantProfileRepository.findByUserId(userId).map(this::toResponse);
@@ -102,6 +114,9 @@ public class MerchantProfileService {
                 .bankAccountNumber(profile.getBankAccountNumber())
                 .bankName(profile.getBankName())
                 .status(profile.getStatus())
+                .kycStatus(profile.getKycStatus())
+                .kycConfidence(profile.getKycConfidence())
+                .kycVerifiedAt(profile.getKycVerifiedAt())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
                 .build();

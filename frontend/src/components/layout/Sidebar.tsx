@@ -1,83 +1,86 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, LayoutDashboard, Wallet, Send, History, Settings, LogOut, Zap, Shield, Users, QrCode, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Store, Settings, LogOut, Shield, Users, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { ADMIN } from '../../constants/roles.constants';
+
+const menuItems = [
+  { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
+  { icon: CreditCard, label: 'Paiement', path: '/payment' },
+  { icon: Store, label: 'Portail Marchand', path: '/merchant/portal' },
+  { icon: Settings, label: 'Profil', path: '/profile' },
+];
+
+const adminMenuItems = [
+  { icon: Shield, label: 'Admin Dashboard', path: '/admin/dashboard' },
+  { icon: FileText, label: 'Demandes KYC', path: '/admin/affiliation-requests' },
+  { icon: Users, label: 'Marchands', path: '/admin/merchants' },
+  { icon: Users, label: 'Utilisateurs', path: '/admin/users' },
+];
 
 const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { logout, user } = useAuth();
-
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
-    { icon: Shield, label: 'Admin', path: '/admin/dashboard', roles: [ADMIN] },
-    { icon: Users, label: 'Utilisateurs', path: '/admin/users', roles: [ADMIN] },
-    { icon: Wallet, label: 'Portefeuille', path: '/wallet' },
-    { icon: Send, label: 'Transfert', path: '/transfer' },
-    { icon: QrCode, label: 'QR Code', path: '/qr' },
-    { icon: History, label: 'Transactions', path: '/transactions' },
-    { icon: Zap, label: 'Assistant IA', path: '/assistant' },
-    { icon: AlertTriangle, label: 'Alertes fraude', path: '/fraud-alerts' },
-    { icon: Settings, label: 'Profil', path: '/profile' },
-  ];
+  const isAdmin = user?.roles?.includes('ADMIN');
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <aside
-      className={`hidden lg:flex flex-col fixed left-0 top-16 bottom-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-all duration-300 ${
-        collapsed ? 'w-20' : 'w-64'
-      }`}
-    >
-      {/* Collapse Toggle */}
-      <div className="flex justify-end p-4 border-b border-slate-200 dark:border-slate-800">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 dark:hover:bg-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
-      </div>
-
-      {/* Menu Items */}
-      <nav className="flex-1 px-4 space-y-2 py-4">
-        {menuItems.map((item) => {
+    <div className="group fixed left-0 top-16 bottom-0 z-40 hidden lg:block w-16 hover:w-64 transition-all duration-300 ease-in-out">
+      <nav className="flex flex-col gap-2 p-3 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-lg h-full overflow-hidden">
+        {isAdmin ? adminMenuItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
-          const show = !item.roles || item.roles.some((role) => user?.roles?.includes(role));
-
-          if (!show) return null;
 
           return (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 p-3 rounded-xl transition-colors relative ${
                 active
-                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border-l-4 border-cyan-500 dark:border-cyan-400'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-amber-600'
               }`}
             >
-              <Icon size={20} className={`flex-shrink-0 ${item.path === '/admin/dashboard' ? 'text-amber-500 dark:text-amber-400' : ''}`} />
-              {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+              <Icon className="w-5 h-5 min-w-5" />
+              <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {item.label}
+              </span>
+            </Link>
+          );
+        }) : menuItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
+
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 p-3 rounded-xl transition-colors relative ${
+                active
+                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 hover:text-cyan-600'
+              }`}
+            >
+              <Icon className="w-5 h-5 min-w-5" />
+              <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {item.label}
+              </span>
             </Link>
           );
         })}
-      </nav>
 
-      {/* Logout Button */}
-      <div className="border-t border-slate-200 dark:border-slate-800 p-4">
-        <button
-          onClick={logout}
-          className="flex items-center gap-4 w-full px-4 py-3 rounded-lg text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/10 transition-colors justify-center lg:justify-start"
-        >
-          <LogOut size={20} className="shrink-0" />
-          {!collapsed && <span className="text-sm font-medium">Déconnexion</span>}
-        </button>
-      </div>
-    </aside>
+        <div className="mt-auto">
+          <button
+            onClick={logout}
+            className="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors w-full"
+          >
+            <LogOut className="w-5 h-5 min-w-5" />
+            <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              Déconnexion
+            </span>
+          </button>
+        </div>
+      </nav>
+    </div>
   );
 };
 

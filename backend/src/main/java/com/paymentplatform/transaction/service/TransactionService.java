@@ -6,7 +6,9 @@ import com.paymentplatform.common.exception.BusinessException;
 import com.paymentplatform.ledger.entity.LedgerEntry;
 import com.paymentplatform.ledger.service.LedgerService;
 import com.paymentplatform.security.CurrentUserService;
+import com.paymentplatform.auth.twofactor.TwoFactorService;
 import com.paymentplatform.transaction.TransactionStatus;
+import com.paymentplatform.user.entity.User;
 import com.paymentplatform.transaction.dto.TransferRequestDTO;
 import com.paymentplatform.transaction.dto.TransferResponseDTO;
 import com.paymentplatform.transaction.entity.Transaction;
@@ -36,6 +38,7 @@ public class TransactionService {
     private final LedgerService ledgerService;
     private final CurrentUserService currentUserService;
     private final WalletService walletService;
+    private final TwoFactorService twoFactorService;
     private final com.paymentplatform.aiclient.FraudDetectionClient fraudDetectionClient;
     private final com.paymentplatform.aiclient.RiskScoringClient riskScoringClient;
     private final com.paymentplatform.operator.OperatorClientRegistry operatorClientRegistry;
@@ -189,6 +192,16 @@ public class TransactionService {
 
         ledgerService.saveEntries(List.of(debitEntry, creditEntry));
 
+        User currentUser = currentUserService.getCurrentUser();
+        if (currentUser.isTwoFactorEnabled()) {
+            if (request.getTwoFactorCode() == null || request.getTwoFactorCode().isBlank()) {
+                throw new BusinessException("Un code 2FA est requis pour effectuer ce retrait", HttpStatus.FORBIDDEN);
+            }
+            if (!twoFactorService.verifyCode(currentUser.getTwoFactorSecret(), Integer.parseInt(request.getTwoFactorCode()))) {
+                throw new BusinessException("Code 2FA invalide", HttpStatus.FORBIDDEN);
+            }
+        }
+
         walletService.withdraw(currentUserService.getCurrentUserId(), currentUserService.isCurrentUserAdmin(), sender.getId(), request.getAmount(), "Transfert vers " + receiver.getAccountNumber());
         walletService.deposit(receiver.getUser().getId(), true, receiver.getId(), request.getAmount(), "Transfert depuis " + sender.getAccountNumber());
 
@@ -231,13 +244,69 @@ public class TransactionService {
             return List.of();
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"));
 
         if (isAdmin) {
             return transactionRepository.findAll(pageable).getContent();
         }
 
         return transactionRepository.findBySenderAccountOrReceiverAccount(account, account, pageable).getContent();
+    }
+
+    public List<Transaction> searchTransactions(UUID currentUserId, boolean isAdmin, String reference, TransactionStatus status, java.time.Instant from, java.time.Instant to) {
+        if (isAdmin) {
+            if (reference != null && !reference.isBlank()) {
+                return transactionRepository.findByReferenceContainingIgnoreCase(reference)
+                        .stream().collect(java.util.stream.Collectors.toList());
+            }
+            if (status != null && from != null && to != null) {
+                return transactionRepository.findByStatusAndCreatedAtBetween(status, from, to);
+            }
+            return transactionRepository.findAll();
+        }
+
+        Account account = accountRepository.findByUserId(currentUserId).orElse(null);
+        if (account == null) {
+            return List.of();
+        }
+
+        java.util.List<Transaction> all = transactionRepository.findBySenderAccountOrReceiverAccount(
+                account, account, org.springframework.data.domain.PageRequest.of(0, 1000, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+        ).getContent();
+
+        if (reference != null && !reference.isBlank()) {
+            String q = reference.toLowerCase();
+            all = all.stream().filter(t -> t.getReference() != null && t.getReference().toLowerCase().contains(q)).collect(java.util.stream.Collectors.toList());
+        }
+        if (status != null) {
+            all = all.stream().filter(t -> t.getStatus() == status).collect(java.util.stream.Collectors.toList());
+        }
+        if (from != null && to != null) {
+            all = all.stream().filter(t -> t.getCreatedAt() != null && !t.getCreatedAt().isBefore(from) && !t.getCreatedAt().isAfter(to)).collect(java.util.stream.Collectors.toList());
+        }
+        return all;
+    }
+
+    public java.math.BigDecimal getMerchantSalesTotal(UUID merchantUserId, java.time.Instant from, java.time.Instant to) {
+        Account merchantAccount = accountRepository.findByUserId(merchantUserId).orElse(null);
+        if (merchantAccount == null) {
+            return java.math.BigDecimal.ZERO;
+        }
+        List<Transaction> sales = transactionRepository.findByReceiverAccountAndStatusAndCreatedAtBetween(
+                merchantAccount, TransactionStatus.COMPLETED, from, to
+        );
+        return sales.stream().map(com.paymentplatform.transaction.entity.Transaction::getAmount)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public long getMerchantSalesCount(UUID merchantUserId, java.time.Instant from, java.time.Instant to) {
+        Account merchantAccount = accountRepository.findByUserId(merchantUserId).orElse(null);
+        if (merchantAccount == null) {
+            return 0;
+        }
+        return transactionRepository.findByReceiverAccountAndStatusAndCreatedAtBetween(
+                merchantAccount, TransactionStatus.COMPLETED, from, to
+        ).size();
     }
 
     public Transaction getTransaction(UUID id, UUID currentUserId, boolean isAdmin) {

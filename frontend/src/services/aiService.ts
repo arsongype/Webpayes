@@ -46,7 +46,7 @@ const aiService = {
     return response.data as string;
   },
 
-  getRecommendations: async (payload: { user_id: string; transaction_history?: unknown[]; current_balance?: number }): Promise<RecommendationResponse> => {
+  getRecommendations: async (payload: { user_id: string; transaction_history?: unknown[]; current_balance?: number; currency?: string }): Promise<RecommendationResponse> => {
     const response = await api.post('/ai/recommendations/analyze', payload);
     return response.data as RecommendationResponse;
   },

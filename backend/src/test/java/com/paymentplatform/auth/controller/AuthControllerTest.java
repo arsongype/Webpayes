@@ -1,7 +1,7 @@
 package com.paymentplatform.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.paymentplatform.auth.dto.AuthResponseDTO;
+import com.paymentplatform.auth.dto.RegisterResponseDTO;
 import com.paymentplatform.auth.dto.LoginRequestDTO;
 import com.paymentplatform.auth.dto.RegisterRequestDTO;
 import com.paymentplatform.auth.service.AuthService;
@@ -43,11 +43,14 @@ class AuthControllerTest {
 
     @Test
     void register_returnsCreated() throws Exception {
-        RegisterRequestDTO req = new RegisterRequestDTO("John", "Doe", "john@example.com", "password123", null);
-        AuthResponseDTO.UserSummary userSummary = new AuthResponseDTO.UserSummary(
+        RegisterRequestDTO req = new RegisterRequestDTO(
+                "John", "Doe", "john@example.com", "+261340000000", "123456789012",
+                "2000-01-01", "Malagasy", "password123", "password123", null
+        );
+        RegisterResponseDTO.UserSummary userSummary = new RegisterResponseDTO.UserSummary(
                 UUID.randomUUID(), "John", "Doe", "john@example.com", "USER", "ACCT-123"
         );
-        AuthResponseDTO resp = new AuthResponseDTO("token", "Bearer", userSummary);
+        RegisterResponseDTO resp = new RegisterResponseDTO("Compte créé avec succès. Veuillez vous connecter.", userSummary);
 
         when(authService.register(any(RegisterRequestDTO.class))).thenReturn(resp);
 
@@ -59,11 +62,11 @@ class AuthControllerTest {
 
     @Test
     void login_returnsOk() throws Exception {
-        LoginRequestDTO req = new LoginRequestDTO("john@example.com", "password123");
-        AuthResponseDTO.UserSummary userSummary = new AuthResponseDTO.UserSummary(
-                UUID.randomUUID(), "John", "Doe", "john@example.com", "USER", "ACCT-123"
+        LoginRequestDTO req = new LoginRequestDTO("john@example.com", "password123", null);
+        com.paymentplatform.auth.dto.AuthResponseDTO.UserSummary userSummary = new com.paymentplatform.auth.dto.AuthResponseDTO.UserSummary(
+                UUID.randomUUID(), "John", "Doe", "john@example.com", "USER", "ACCT-123", false
         );
-        AuthResponseDTO resp = new AuthResponseDTO("token", "Bearer", userSummary);
+        com.paymentplatform.auth.dto.AuthResponseDTO resp = new com.paymentplatform.auth.dto.AuthResponseDTO("token", "Bearer", userSummary, false);
 
         when(authService.login(any(LoginRequestDTO.class))).thenReturn(resp);
 

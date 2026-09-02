@@ -19,14 +19,11 @@ OVERLAY_DIR="../infra/kubernetes/overlays/${ENV}"
 echo "==> Building images with tag ${TAG}"
 docker build -t "${REGISTRY}/backend:${TAG}" -f ../infra/docker/backend.Dockerfile ../backend
 docker build -t "${REGISTRY}/frontend:${TAG}" -f ../infra/docker/frontend.prod.Dockerfile ../frontend
-
-for svc in fraud-detection risk-scoring kyc-verification chatbot recommendation routing-engine; do
-  docker build -t "${REGISTRY}/${svc}:${TAG}" "../ai-services/${svc}-service"
-done
+docker build -t "${REGISTRY}/ai-engine:${TAG}" ../ai-engine
 
 if [[ -n "${PUSH:-}" ]]; then
   echo "==> Pushing images"
-  for img in backend frontend fraud-detection risk-scoring kyc-verification chatbot recommendation routing-engine; do
+  for img in backend frontend ai-engine; do
     docker push "${REGISTRY}/${img}:${TAG}"
   done
 fi
@@ -37,5 +34,6 @@ kubectl apply -k "$OVERLAY_DIR"
 echo "==> Waiting for rollout"
 kubectl -n payment-platform rollout status deployment/${ENV}-backend --timeout=300s || true
 kubectl -n payment-platform rollout status deployment/${ENV}-frontend --timeout=300s || true
+kubectl -n payment-platform rollout status deployment/${ENV}-ai-engine --timeout=300s || true
 
 echo "Deploy to '${ENV}' complete."

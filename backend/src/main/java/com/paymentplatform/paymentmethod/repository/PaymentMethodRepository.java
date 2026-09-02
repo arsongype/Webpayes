@@ -1,7 +1,6 @@
 package com.paymentplatform.paymentmethod.repository;
 
 import com.paymentplatform.paymentmethod.entity.PaymentMethod;
-import com.paymentplatform.paymentmethod.entity.PaymentMethodCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

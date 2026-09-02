@@ -25,6 +25,9 @@ public class MerchantProfileResponseDTO {
     private String bankAccountNumber;
     private String bankName;
     private MerchantProfileStatus status;
+    private String kycStatus;
+    private Double kycConfidence;
+    private Instant kycVerifiedAt;
     private Instant createdAt;
     private Instant updatedAt;
 }

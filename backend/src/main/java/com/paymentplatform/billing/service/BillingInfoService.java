@@ -35,6 +35,10 @@ public class BillingInfoService {
         return billingInfoRepository.findByUserId(userId).map(this::toResponse);
     }
 
+    public Optional<BillingInfoResponseDTO> getById(UUID id) {
+        return billingInfoRepository.findById(id).map(this::toResponse);
+    }
+
     @Transactional
     public BillingInfoResponseDTO createOrUpdateMyBillingInfo(BillingInfoRequestDTO request) {
         UUID userId = currentUserService.getCurrentUserId();

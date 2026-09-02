@@ -1,24 +1,33 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import merchantService, { type MerchantProfileDTO } from '../../services/merchantService';
 
 const AdminMerchants = () => {
+  const location = useLocation();
+  const searchResults = (location.state as any)?.searchResults;
   const [profiles, setProfiles] = useState<MerchantProfileDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const load = async () => {
-    try {
-      const data = await merchantService.listAll();
-      setProfiles(data);
-    } catch {
-      setError('Impossible de charger les marchands.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        let data: MerchantProfileDTO[];
+        if (searchResults) {
+          data = searchResults;
+        } else {
+          data = await merchantService.listAll();
+        }
+        setProfiles(data);
+      } catch {
+        setError('Impossible de charger les marchands.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [searchResults]);
 
   const handleApprove = async (id: string) => {
     try {
@@ -69,38 +78,28 @@ const AdminMerchants = () => {
               <p className="text-slate-500 dark:text-slate-400">Aucun marchand.</p>
             </div>
           ) : (
-            <div className="mt-8 overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/10">
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Boutique</th>
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Téléphone</th>
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Statut</th>
-                    <th className="pb-3 font-medium text-slate-500 dark:text-slate-400">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-                  {profiles.map((p) => (
-                    <tr key={p.id}>
-                      <td className="py-4 font-medium text-slate-900 dark:text-white">{p.shopName}</td>
-                      <td className="py-4 text-slate-500 dark:text-slate-400">{p.phoneNumber}</td>
-                      <td className="py-4">
-                        <span className={`inline-flex items-center rounded-full bg-${statusColor(p.status)}-500/15 px-3 py-1 text-xs font-medium text-${statusColor(p.status)}-600 dark:text-${statusColor(p.status)}-300`}>
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="py-4">
-                        {p.status !== 'APPROVED' && (
-                          <button onClick={() => handleApprove(p.id)} className="mr-2 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300">Approuver</button>
-                        )}
-                        {p.status !== 'REJECTED' && (
-                          <button onClick={() => handleReject(p.id)} className="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-medium text-rose-600 dark:text-rose-300">Rejeter</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-8 space-y-4">
+              {profiles.map((p) => (
+                <div key={p.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-white/10 dark:bg-slate-800/50">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="font-semibold text-slate-900 dark:text-white">{p.shopName}</h3>
+                      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{p.phoneNumber}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`inline-flex items-center rounded-full bg-${statusColor(p.status)}-500/15 px-3 py-1 text-xs font-medium text-${statusColor(p.status)}-600 dark:text-${statusColor(p.status)}-300`}>
+                        {p.status}
+                      </span>
+                      {p.status !== 'APPROVED' && (
+                        <button onClick={() => handleApprove(p.id)} className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300">Approuver</button>
+                      )}
+                      {p.status !== 'REJECTED' && (
+                        <button onClick={() => handleReject(p.id)} className="rounded-full bg-rose-500/15 px-3 py-1 text-xs font-medium text-rose-600 dark:text-rose-300">Rejeter</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

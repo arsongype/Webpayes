@@ -2,18 +2,9 @@ import api from './api';
 
 export type PaymentMethodType = 'CARD' | 'MOBILE_MONEY' | 'BANK_TRANSFER';
 
-export interface PaymentMethodCategoryDTO {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  createdAt?: string;
-}
-
 export interface PaymentMethodDTO {
   id: string;
   userId: string;
-  categoryId: string;
   type: PaymentMethodType;
   provider?: string;
   accountNumber?: string;
@@ -24,7 +15,6 @@ export interface PaymentMethodDTO {
 }
 
 export interface PaymentMethodRequest {
-  categoryId: string;
   type: PaymentMethodType;
   provider?: string;
   accountNumber?: string;
@@ -50,14 +40,6 @@ const paymentMethodService = {
   },
   toggleFavorite: async (id: string): Promise<PaymentMethodDTO> => {
     const resp = await api.post(`/payment-methods/${id}/favorite`);
-    return resp.data;
-  },
-  listCategories: async (): Promise<PaymentMethodCategoryDTO[]> => {
-    const resp = await api.get('/payment-methods/categories');
-    return resp.data;
-  },
-  createCategory: async (payload: { name: string; description?: string; icon?: string }): Promise<PaymentMethodCategoryDTO> => {
-    const resp = await api.post('/payment-methods/categories', payload);
     return resp.data;
   },
 };
