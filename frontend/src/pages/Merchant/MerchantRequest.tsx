@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import merchantService, { type MerchantAffiliationRequestDTO } from '../../services/merchantService';
-import { useAuth } from '../../hooks/useAuth';
+
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 import { Store, Package, ShoppingBag, TrendingUp, Wallet, QrCode, FileText, Upload, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 const MerchantRequest = () => {
-  const { user } = useAuth();
   const [request, setRequest] = useState<MerchantAffiliationRequestDTO | null>(null);
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(true);
@@ -332,3 +331,5 @@ const MerchantRequest = () => {
 };
 
 export default MerchantRequest;
+
+

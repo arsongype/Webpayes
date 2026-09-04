@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
-import type { ReactNode } from 'react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -12,12 +11,12 @@ export interface Toast {
   duration?: number;
 }
 
-interface ToastProps {
+interface ToastItemProps {
   toast: Toast;
   onRemove: (id: string) => void;
 }
 
-const ToastItem = ({ toast, onRemove }: ToastProps) => {
+const ToastItem = ({ toast, onRemove }: ToastItemProps) => {
   const [visible, setVisible] = useState(true);
 
   const handleRemove = useCallback(() => {
@@ -25,9 +24,9 @@ const ToastItem = ({ toast, onRemove }: ToastProps) => {
     setTimeout(() => onRemove(toast.id), 300);
   }, [toast.id, onRemove]);
 
-  const typeStyles = {
+  const typeStyles: Record<ToastType, string> = {
     success: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200',
-    error: 'border-rose-400/30 bg-rose-500/10 text-rose-600 dark:text-rose-200',
+    error: 'border-rose-400/30 bg-rose-500/10 text-rose-600 dark:text-rose-300',
     warning: 'border-amber-400/30 bg-amber-500/10 text-amber-700 dark:text-amber-200',
     info: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-200',
   };
@@ -76,7 +75,7 @@ export const ToastContainer = ({ toasts, setToasts }: ToastContainerProps) => {
     const newToast = { ...toast, id, duration: toast.duration ?? 10000 };
     setToasts((prev) => [...prev, newToast]);
 
-    if (newToast.duration > 0) {
+    if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, newToast.duration);
@@ -84,31 +83,21 @@ export const ToastContainer = ({ toasts, setToasts }: ToastContainerProps) => {
   }, [setToasts]);
 
   useEffect(() => {
-    (window as any).showToast = addToast;
+    type WindowWithToast = Window & { showToast?: (toast: Omit<Toast, 'id'>) => void };
+    (window as unknown as WindowWithToast).showToast = addToast;
   }, [addToast]);
 
   return (
-    <>
-      <div
-        className={`fixed bottom-4 right-4 z-[100] flex flex-col gap-2 ${toasts.length === 0 ? 'pointer-events-none' : ''}`}
-        aria-live="polite"
-        aria-label="Notifications"
-      >
-        {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
-        ))}
-      </div>
-    </>
+    <div
+      className={`fixed bottom-4 right-4 z-[100] flex flex-col gap-2 ${toasts.length === 0 ? 'pointer-events-none' : ''}`}
+      aria-live="polite"
+      aria-label="Notifications"
+    >
+      {toasts.map((toast) => (
+        <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
+      ))}
+    </div>
   );
 };
 
-export const useToast = () => {
-  const addToast = (toast: Omit<Toast, 'id'>) => {
-    (window as any).showToast?.(toast);
-  };
-  return { addToast };
-};
-
 export default ToastContainer;
-export type { Toast as ToastType2 };
-export type { ReactNode };

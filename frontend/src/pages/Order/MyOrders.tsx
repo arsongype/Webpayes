@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShoppingBag, XCircle } from 'lucide-react';
 import orderService from '../../services/orderService';
+import type { OrderDTO } from '../../types/order.types';
 
 const MyOrders = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

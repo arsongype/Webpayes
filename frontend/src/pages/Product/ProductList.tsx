@@ -1,16 +1,17 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import productService from '../../services/productService';
 import orderService from '../../services/orderService';
 import Button from '../../components/common/Button/Button';
 import Modal from '../../components/common/Modal/Modal';
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 import { useAuth } from '../../hooks/useAuth';
+import type { ProductDTO, ProductRequest } from '../../types/product.types';
 
 const ProductList = () => {
   const location = useLocation();
-  const searchResults = (location.state as any)?.searchResults;
+  const searchResults = (location.state as { searchResults?: ProductDTO[] } | null)?.searchResults;
   const [products, setProducts] = useState<ProductDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -23,16 +24,7 @@ const ProductList = () => {
   const { user } = useAuth();
   const isMerchant = user?.roles?.includes('ADMIN') || false;
 
-  useEffect(() => {
-    if (searchResults) {
-      setProducts(searchResults);
-      setLoading(false);
-    } else {
-      load();
-    }
-  }, [searchResults]);
-
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await productService.list(query || undefined);
@@ -42,14 +34,24 @@ const ProductList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [query]);
+
+  useEffect(() => {
+    if (searchResults) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setProducts(searchResults);
+      setLoading(false);
+    } else {
+      load();
+    }
+  }, [searchResults, load]);
 
   useEffect(() => {
     if (!searchResults) {
       const timer = setTimeout(() => load(), 300);
       return () => clearTimeout(timer);
     }
-  }, [query, searchResults]);
+  }, [query, searchResults, load]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -269,3 +271,6 @@ const ProductList = () => {
 };
 
 export default ProductList;
+
+
+

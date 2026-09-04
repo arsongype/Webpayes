@@ -74,7 +74,7 @@ export interface KycVerificationResponse {
   verification_id: string;
   user_id: string;
   status: string;
-  extracted_data?: Record<string, any>;
+  extracted_data?: Record<string, unknown>;
   confidence_score: number;
   rejection_reason?: string;
   created_at: string;

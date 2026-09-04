@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
 import productService, { type ProductDTO, type ProductRequest } from '../../services/productService';
@@ -28,7 +28,9 @@ const ProductManage = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -216,3 +218,4 @@ const ProductManage = () => {
 };
 
 export default ProductManage;
+

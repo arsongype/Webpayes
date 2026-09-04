@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import refundService, { type DisputeDTO, type DisputeRequest } from '../../services/refundService';
 import transactionService, { type Transaction } from '../../services/transactionService';
-import { useAuth } from '../../hooks/useAuth';
+
 
 const Disputes = () => {
-  const { user } = useAuth();
   const [disputes, setDisputes] = useState<DisputeDTO[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +24,9 @@ const Disputes = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,3 +128,6 @@ const Disputes = () => {
 };
 
 export default Disputes;
+
+
+

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import twoFactorService, { type TwoFactorSetupResponse, type TwoFactorRecoveryResponse } from '../../services/twoFactorService';
+import twoFactorService, { type TwoFactorSetupResponse } from '../../services/twoFactorService';
 import { useAuth } from '../../hooks/useAuth';
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 import { ShieldCheck, KeyRound, Camera, Copy, Check, RefreshCw } from 'lucide-react';
@@ -42,9 +42,10 @@ const TwoFactorSetup = () => {
     try {
       const data = await twoFactorService.setup();
       setSetup(data);
-    } catch (err: any) {
-      console.error('2FA setup error:', err?.response?.data ?? err);
-      const msg = err?.response?.data?.message ?? err?.message ?? 'Impossible de générer la configuration 2FA.';
+    } catch (err) {
+      const axiosError = err as { response?: { data?: { message?: string } }; message?: string };
+      console.error('2FA setup error:', axiosError?.response?.data ?? err);
+      const msg = axiosError?.response?.data?.message ?? axiosError?.message ?? 'Impossible de générer la configuration 2FA.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -325,3 +326,4 @@ const TwoFactorSetup = () => {
 };
 
 export default TwoFactorSetup;
+

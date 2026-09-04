@@ -66,7 +66,7 @@ const TIMEZONES = [
   'Asia/Singapore',
 ];
 
-const TABS: { key: TabKey; label: string; icon: any }[] = [
+const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
   { key: 'personal', label: 'Informations', icon: User },
   { key: 'security', label: 'Sécurité', icon: ShieldCheck },
   { key: 'account', label: 'Compte', icon: Wallet },
@@ -117,6 +117,27 @@ const UserProfile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
+  const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showMessage = (msg: { type: 'success' | 'error'; text: string }) => {
+    setMessage(msg);
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current);
+    }
+    messageTimeoutRef.current = setTimeout(() => {
+      setMessage(null);
+      messageTimeoutRef.current = null;
+    }, 4000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const copy = (value: string, field: string) => {
     navigator.clipboard.writeText(value);
     setCopiedField(field);
@@ -124,6 +145,7 @@ const UserProfile = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFirstName(user?.firstName ?? '');
     setLastName(user?.lastName ?? '');
     setEmail(user?.email ?? '');
@@ -135,6 +157,9 @@ const UserProfile = () => {
       try {
         const data = await userService.getMyProfile();
         if (cancelled) return;
+        if (!data || !data.user) {
+          return;
+        }
         setProfile(data);
         if (data.user.phoneNumber) setPhoneNumber(data.user.phoneNumber);
         if (data.user.cin) setCin(data.user.cin);
@@ -149,7 +174,7 @@ const UserProfile = () => {
           setTwoFactorEnabled(data.user.twoFactorEnabled);
         }
       } catch {
-        if (!cancelled) setMessage({ type: 'error', text: 'Impossible de charger le profil.' });
+        // Silently fail - token may be invalid, interceptor will handle redirect
       }
 
       try {
@@ -192,7 +217,7 @@ const UserProfile = () => {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, []);
+  }, [twoFactorEnabled]);
 
   const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -206,9 +231,9 @@ const UserProfile = () => {
       } catch {
         // Local optimistic update still applied
       }
-      setMessage({ type: 'success', text: 'Photo de profil mise à jour.' });
+      showMessage({ type: 'success', text: 'Photo de profil mise à jour.' });
     } catch {
-      setMessage({ type: 'error', text: 'Impossible de charger cette image.' });
+      showMessage({ type: 'error', text: 'Impossible de charger cette image.' });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -222,7 +247,7 @@ const UserProfile = () => {
     } catch {
       // ignore
     }
-    setMessage({ type: 'success', text: 'Photo de profil supprimée.' });
+    showMessage({ type: 'success', text: 'Photo de profil supprimée.' });
   };
 
   const handleSaveProfile = async () => {
@@ -244,9 +269,9 @@ const UserProfile = () => {
         email: updated.email,
       });
       setProfile((prev) => prev ? { ...prev, user: updated } : prev);
-      setMessage({ type: 'success', text: 'Profil mis à jour avec succès.' });
+      showMessage({ type: 'success', text: 'Profil mis à jour avec succès.' });
     } catch {
-      setMessage({ type: 'error', text: 'Échec de la mise à jour du profil.' });
+      showMessage({ type: 'error', text: 'Échec de la mise à jour du profil.' });
     } finally {
       setSaving(false);
     }
@@ -262,9 +287,9 @@ const UserProfile = () => {
         sms: notifySms,
         push: notifyPush,
       });
-      setMessage({ type: 'success', text: 'Préférences enregistrées.' });
+      showMessage({ type: 'success', text: 'Préférences enregistrées.' });
     } catch {
-      setMessage({ type: 'error', text: "Échec de l'enregistrement des préférences." });
+      showMessage({ type: 'error', text: "Échec de l'enregistrement des préférences." });
     } finally {
       setSaving(false);
     }
@@ -273,31 +298,31 @@ const UserProfile = () => {
   const handleChangePassword = async () => {
     setMessage(null);
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setMessage({ type: 'error', text: 'Veuillez remplir tous les champs.' });
+      showMessage({ type: 'error', text: 'Veuillez remplir tous les champs.' });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Les nouveaux mots de passe ne correspondent pas.' });
+      showMessage({ type: 'error', text: 'Les nouveaux mots de passe ne correspondent pas.' });
       return;
     }
     if (newPassword.length < 8) {
-      setMessage({ type: 'error', text: 'Le mot de passe doit contenir au moins 8 caractères.' });
+      showMessage({ type: 'error', text: 'Le mot de passe doit contenir au moins 8 caractères.' });
       return;
     }
     if (newPassword === currentPassword) {
-      setMessage({ type: 'error', text: "Le nouveau mot de passe doit être différent de l'ancien." });
+      showMessage({ type: 'error', text: "Le nouveau mot de passe doit être différent de l'ancien." });
       return;
     }
     setSaving(true);
     try {
       await userService.updateMe({ password: newPassword });
-      setMessage({ type: 'success', text: 'Mot de passe modifié avec succès.' });
+      showMessage({ type: 'success', text: 'Mot de passe modifié avec succès.' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setShowPasswordModal(false);
     } catch {
-      setMessage({ type: 'error', text: 'Échec du changement de mot de passe.' });
+      showMessage({ type: 'error', text: 'Échec du changement de mot de passe.' });
     } finally {
       setSaving(false);
     }
@@ -320,7 +345,7 @@ const UserProfile = () => {
     e.preventDefault();
     setTwoFactorDisableCodeTouched(true);
     if (!twoFactorDisableCode.trim()) {
-      setMessage({ type: 'error', text: 'Veuillez saisir le code de vérification ou un code de secours.' });
+      showMessage({ type: 'error', text: 'Veuillez saisir le code de vérification ou un code de secours.' });
       return;
     }
     setSaving(true);
@@ -331,12 +356,12 @@ const UserProfile = () => {
         await twoFactorService.disable(undefined, twoFactorDisableCode);
       }
       setTwoFactorEnabled(false);
-      setMessage({ type: 'success', text: 'Authentification à deux facteurs désactivée.' });
+      showMessage({ type: 'success', text: 'Authentification à deux facteurs désactivée.' });
       setShowTwoFactorDisableModal(false);
       setTwoFactorDisableCode('');
       setTwoFactorDisableCodeTouched(false);
     } catch {
-      setMessage({ type: 'error', text: 'Code incorrect.' });
+      showMessage({ type: 'error', text: 'Code incorrect.' });
     } finally {
       setSaving(false);
     }
@@ -348,7 +373,21 @@ const UserProfile = () => {
       setProfileRecoveryCodes(data.recoveryCodes);
       setShowRecoveryCodesModal(true);
     } catch {
-      setMessage({ type: 'error', text: 'Impossible de charger les codes de secours.' });
+      showMessage({ type: 'error', text: 'Impossible de charger les codes de secours.' });
+    }
+  };
+
+  const handleVerifyEmail = async () => {
+    try {
+      await userService.verifyEmail();
+      setProfile((prev) => prev ? {
+        ...prev,
+        user: { ...prev.user, emailVerified: true },
+        security: { ...prev.security, emailVerified: true },
+      } : prev);
+      showMessage({ type: 'success', text: 'Email vérifié avec succès.' });
+    } catch {
+      showMessage({ type: 'error', text: 'Impossible de vérifier l\'email.' });
     }
   };
 
@@ -364,7 +403,7 @@ const UserProfile = () => {
       });
       setRecommendations(result);
     } catch {
-      setMessage({ type: 'error', text: 'Impossible de charger les recommandations.' });
+      showMessage({ type: 'error', text: 'Impossible de charger les recommandations.' });
     } finally {
       setLoadingRec(false);
     }
@@ -388,7 +427,7 @@ const UserProfile = () => {
       });
       setRouting(result);
     } catch {
-      setMessage({ type: 'error', text: 'Impossible de charger le routage.' });
+      showMessage({ type: 'error', text: 'Impossible de charger le routage.' });
     } finally {
       setLoadingRoute(false);
     }
@@ -412,7 +451,7 @@ const UserProfile = () => {
     a.download = `profil-${profile.user.email}-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setMessage({ type: 'success', text: 'Données exportées avec succès.' });
+    showMessage({ type: 'success', text: 'Données exportées avec succès.' });
   };
 
   return (
@@ -577,6 +616,7 @@ const UserProfile = () => {
                   onDisable2FA={() => setShowTwoFactorDisableModal(true)}
                   onShowRecoveryCodes={handleShowRecoveryCodes}
                   onChangePassword={() => setShowPasswordModal(true)}
+                  onVerifyEmail={handleVerifyEmail}
                 />
               )}
 
@@ -828,18 +868,36 @@ interface PersonalTabProps {
   onChangePassword: () => void;
 }
 
-const PersonalTab = (p: PersonalTabProps) => {
-  const Field = ({ id, label, icon: Icon, ...rest }: any) => (
-    <div>
-      <label className="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300" htmlFor={id}>
-        {label}
-      </label>
-      <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80">
-        <Icon size={18} className="text-slate-400" aria-hidden="true" />
-        <input id={id} {...rest} className="w-full bg-transparent text-slate-900 outline-none dark:text-slate-100" />
-      </div>
+type FieldProps = {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
+};
+
+const Field = ({ id, label, icon: Icon, value, onChange, placeholder, type = 'text' }: FieldProps) => (
+  <div>
+    <label className="mb-2 block text-sm font-medium text-slate-600 dark:text-slate-300" htmlFor={id}>
+      {label}
+    </label>
+    <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80">
+      <Icon size={18} className="text-slate-400" aria-hidden="true" />
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-slate-900 outline-none dark:text-slate-100"
+      />
     </div>
-  );
+  </div>
+);
+
+const PersonalTab = (p: PersonalTabProps) => {
 
   return (
     <div className="space-y-6">
@@ -855,14 +913,14 @@ const PersonalTab = (p: PersonalTabProps) => {
           <User size={14} /> Identité
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="firstName" label="Prénom" icon={User} type="text" value={p.firstName} onChange={(e: any) => p.setFirstName(e.target.value)} placeholder="Prénom" />
-          <Field id="lastName" label="Nom" icon={User} type="text" value={p.lastName} onChange={(e: any) => p.setLastName(e.target.value)} placeholder="Nom" />
-          <Field id="email" label="Adresse email" icon={Mail} type="email" value={p.email} onChange={(e: any) => p.setEmail(e.target.value)} placeholder="vous@exemple.com" />
-          <Field id="phone" label="Téléphone" icon={Phone} type="tel" value={p.phoneNumber} onChange={(e: any) => p.setPhoneNumber(e.target.value)} placeholder="+261 34 00 000 00" />
-          <Field id="dob" label="Date de naissance" icon={Calendar} type="date" value={p.dateOfBirth} onChange={(e: any) => p.setDateOfBirth(e.target.value)} />
-          <Field id="nationality" label="Nationalité" icon={Globe} type="text" value={p.nationality} onChange={(e: any) => p.setNationality(e.target.value)} placeholder="Française, Malgache..." />
+          <Field id="firstName" label="Prénom" icon={User} type="text" value={p.firstName} onChange={(e) => p.setFirstName(e.target.value)} placeholder="Prénom" />
+          <Field id="lastName" label="Nom" icon={User} type="text" value={p.lastName} onChange={(e) => p.setLastName(e.target.value)} placeholder="Nom" />
+          <Field id="email" label="Adresse email" icon={Mail} type="email" value={p.email} onChange={(e) => p.setEmail(e.target.value)} placeholder="vous@exemple.com" />
+          <Field id="phone" label="Téléphone" icon={Phone} type="tel" value={p.phoneNumber} onChange={(e) => p.setPhoneNumber(e.target.value)} placeholder="+261 34 00 000 00" />
+          <Field id="dob" label="Date de naissance" icon={Calendar} type="date" value={p.dateOfBirth} onChange={(e) => p.setDateOfBirth(e.target.value)} />
+          <Field id="nationality" label="Nationalité" icon={Globe} type="text" value={p.nationality} onChange={(e) => p.setNationality(e.target.value)} placeholder="Française, Malgache..." />
           <div className="sm:col-span-2">
-            <Field id="cin" label="Numéro d'identité (CIN / Passeport)" icon={IdCard} type="text" value={p.cin} onChange={(e: any) => p.setCin(e.target.value)} placeholder="N° de carte d'identité ou passeport" />
+            <Field id="cin" label="Numéro d'identité (CIN / Passeport)" icon={IdCard} type="text" value={p.cin} onChange={(e) => p.setCin(e.target.value)} placeholder="N° de carte d'identité ou passeport" />
           </div>
         </div>
       </section>
@@ -902,23 +960,25 @@ interface SecurityTabProps {
   onDisable2FA: () => void;
   onShowRecoveryCodes: () => void;
   onChangePassword: () => void;
+  onVerifyEmail: () => void;
 }
 
+const ScoreItem = ({ label, ok, detail }: { label: string; ok: boolean; detail?: string }) => (
+  <li className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-800/40">
+    <div>
+      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{label}</p>
+      {detail && <p className="text-xs text-slate-500 dark:text-slate-400">{detail}</p>}
+    </div>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+      ok ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200'
+    }`}>
+      {ok ? <Check size={12} /> : <AlertTriangle size={12} />}
+      {ok ? 'OK' : 'À améliorer'}
+    </span>
+  </li>
+);
+
 const SecurityTab = (p: SecurityTabProps) => {
-  const ScoreItem = ({ label, ok, detail }: { label: string; ok: boolean; detail?: string }) => (
-    <li className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-800/40">
-      <div>
-        <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{label}</p>
-        {detail && <p className="text-xs text-slate-500 dark:text-slate-400">{detail}</p>}
-      </div>
-      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        ok ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200' : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200'
-      }`}>
-        {ok ? <Check size={12} /> : <AlertTriangle size={12} />}
-        {ok ? 'OK' : 'À améliorer'}
-      </span>
-    </li>
-  );
 
   const formatDate = (iso?: string | null) => {
     if (!iso) return '—';
@@ -965,7 +1025,27 @@ const SecurityTab = (p: SecurityTabProps) => {
         </h3>
         <ul className="space-y-2">
           <ScoreItem label="Authentification à deux facteurs" ok={p.twoFactorEnabled === true} detail="Activez la 2FA TOTP pour sécuriser votre compte" />
-          <ScoreItem label="Email vérifié" ok={p.emailVerified} detail="Confirmez votre adresse email" />
+          <li className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-800/40">
+            <div>
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Email vérifié</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {p.emailVerified ? 'Votre adresse email est confirmée' : 'Confirmez votre adresse email'}
+              </p>
+            </div>
+            {p.emailVerified ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200">
+                <Check size={12} /> OK
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={p.onVerifyEmail}
+                className="rounded-xl border border-cyan-300 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-700 transition hover:bg-cyan-500/20 dark:border-cyan-700 dark:text-cyan-200"
+              >
+                Vérifier
+              </button>
+            )}
+          </li>
           <ScoreItem label="Aucune connexion suspecte" ok={p.failedLoginCount === 0} detail={`${p.failedLoginCount} tentative(s) échouée(s)`} />
         </ul>
       </section>
@@ -1023,7 +1103,16 @@ const SecurityTab = (p: SecurityTabProps) => {
   );
 };
 
-const ActionRow = ({ icon: Icon, title, description, actionLabel, onAction, variant = 'primary' }: any) => (
+interface ActionRowProps {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  description: string;
+  actionLabel: string;
+  onAction: () => void;
+  variant?: 'primary' | 'danger';
+}
+
+const ActionRow = ({ icon: Icon, title, description, actionLabel, onAction, variant = 'primary' }: ActionRowProps) => (
   <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-slate-900/40">
     <div className="flex items-start gap-3">
       <div className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-200">
@@ -1332,7 +1421,15 @@ const PreferencesTab = (p: PreferencesTabProps) => {
   );
 };
 
-const ToggleRow = ({ icon: Icon, title, description, checked, onChange }: any) => (
+interface ToggleRowProps {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  description: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+const ToggleRow = ({ icon: Icon, title, description, checked, onChange }: ToggleRowProps) => (
   <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-slate-900/40">
     <div className="flex items-start gap-3">
       <div className="rounded-lg bg-cyan-100 p-2 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-200">
@@ -1449,3 +1546,7 @@ const ActivityTab = (p: ActivityTabProps) => (
 );
 
 export default UserProfile;
+
+
+
+

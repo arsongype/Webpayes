@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import paymentMethodService, { type PaymentMethodDTO, type PaymentMethodRequest } from '../../services/paymentMethodService';
-import { useAuth } from '../../hooks/useAuth';
+
 
 const PaymentMethods = () => {
-  const { user } = useAuth();
   const [methods, setMethods] = useState<PaymentMethodDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -23,7 +22,9 @@ const PaymentMethods = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,3 +192,6 @@ const PaymentMethods = () => {
 };
 
 export default PaymentMethods;
+
+
+

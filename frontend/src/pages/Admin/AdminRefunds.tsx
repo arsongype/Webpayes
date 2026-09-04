@@ -19,7 +19,9 @@ const AdminRefunds = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleAction = async (id: string, action: 'approve' | 'reject' | 'complete') => {
     try {
@@ -118,3 +120,4 @@ const AdminRefunds = () => {
 };
 
 export default AdminRefunds;
+

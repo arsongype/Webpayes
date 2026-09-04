@@ -2,44 +2,49 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { NotificationContext } from './notificationContextStore';
 import notificationService from '../services/notificationService';
-import type { NotificationDTO } from '../types/notification.types';
+import type { NotificationDTO, NotificationType } from '../types/notification.types';
 import { useAuth } from '../hooks/useAuth';
 
 interface NotificationWithMeta extends NotificationDTO {
   read?: boolean;
 }
 
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+const TYPE_MAP: Record<NotificationType, ToastType> = {
+  TRANSACTION: 'success',
+  PAYMENT: 'success',
+  PAYMENT_RECEIVED: 'success',
+  SYSTEM: 'info',
+  ALERT: 'warning',
+};
+
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<NotificationWithMeta[]>([]);
-  const [lastReadAt, setLastReadAt] = useState<number>(Date.now());
+  const [lastReadAt, setLastReadAt] = useState<number>(() => Date.now());
   const shownIds = useRef<Set<string>>(new Set());
   const { isAuthenticated } = useAuth();
+  const refreshRef = useRef<() => void>(() => {});
 
   const refresh = useCallback(async () => {
     try {
       const data = await notificationService.list();
       setNotifications(data);
-      data.forEach((n: NotificationDTO) => {
+      for (const n of data) {
         if (!shownIds.current.has(n.id) && !n.read) {
           shownIds.current.add(n.id);
-          if (typeof window !== 'undefined' && (window as any).showToast) {
-            const typeMap: Record<string, 'success' | 'error' | 'warning' | 'info'> = {
-              TRANSACTION: 'success',
-              PAYMENT: 'success',
-              PAYMENT_RECEIVED: 'success',
-              SYSTEM: 'info',
-            };
-            (window as any).showToast({
-              type: typeMap[n.type] ?? 'info',
+          const toastType = TYPE_MAP[n.type] ?? 'info';
+          if (typeof window !== 'undefined' && (window as unknown as { showToast?: (t: { type: ToastType; title: string; message: string; duration: number }) => void }).showToast) {
+            (window as unknown as { showToast?: (t: { type: ToastType; title: string; message: string; duration: number }) => void }).showToast({
+              type: toastType,
               title: n.subject,
               message: n.body,
               duration: 6000,
             });
           }
         }
-      });
+      }
 
-      // Cleanup old IDs (keep last 100)
       if (shownIds.current.size > 100) {
         const ids = data.slice(0, 50).map((n) => n.id);
         shownIds.current = new Set(ids);
@@ -50,11 +55,21 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
+    refreshRef.current = refresh;
+  });
+
+  useEffect(() => {
     if (!isAuthenticated) return;
-    refresh();
-    const timer = setInterval(refresh, 15000);
+    const timer = setInterval(() => {
+      refreshRef.current();
+    }, 15000);
     return () => clearInterval(timer);
-  }, [refresh, isAuthenticated]);
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    refreshRef.current();
+  }, [isAuthenticated]);
 
   const unreadCount = notifications.filter((n) => !n.read && new Date(n.createdAt).getTime() > lastReadAt).length;
 

@@ -6,7 +6,6 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios';
 import { ADMIN, USER } from '../../constants/roles.constants';
-import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 
 const schema = z.object({
   firstName: z.string().min(2, 'Le prénom est requis'),

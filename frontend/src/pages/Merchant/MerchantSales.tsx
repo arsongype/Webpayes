@@ -15,10 +15,6 @@ const MerchantSales = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadSales();
-  }, []);
-
   const loadSales = async () => {
     setLoading(true);
     setError('');
@@ -31,6 +27,11 @@ const MerchantSales = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadSales();
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MGA' }).format(value);

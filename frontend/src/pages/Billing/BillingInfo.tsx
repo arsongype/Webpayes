@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import billingService, { type BillingInfoDTO, type BillingInfoRequest } from '../../services/billingService';
-import { useAuth } from '../../hooks/useAuth';
+
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 
 const BillingInfo = () => {
-  const { user } = useAuth();
   const [info, setInfo] = useState<BillingInfoDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +40,9 @@ const BillingInfo = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,3 +127,6 @@ const BillingInfo = () => {
 };
 
 export default BillingInfo;
+
+
+

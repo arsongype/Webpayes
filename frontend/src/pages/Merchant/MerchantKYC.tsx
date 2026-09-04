@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileCheck2, Upload, Loader2, CheckCircle2, XCircle, ChevronLeft, AlertTriangle, IdCard, Lock, RefreshCw } from 'lucide-react';
 import merchantService, { type KycStatusResponse } from '../../services/merchantService';
 import { useAuth } from '../../hooks/useAuth';
-import { useToast } from '../../components/common/Toast/ToastContainer';
+import { useToast } from '../../components/common/Toast/useToast';
 
 const MerchantKYC = () => {
   const { user } = useAuth();
@@ -17,7 +17,7 @@ const MerchantKYC = () => {
   const [nationality, setNationality] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     setLoading(true);
     try {
       const data = await merchantService.getKycStatus();
@@ -27,11 +27,12 @@ const MerchantKYC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadStatus();
-  }, []);
+  }, [loadStatus]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,8 +94,9 @@ const MerchantKYC = () => {
       });
       handleResetForm();
       loadStatus();
-    } catch (err: any) {
-      const data = err?.response?.data;
+    } catch (err) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      const data = axiosError?.response?.data;
       const message = data?.message || 'Échec de la vérification KYC.';
       toast.addToast({ type: 'error', title: 'Erreur', message, duration: 8000 });
       loadStatus();
@@ -298,3 +300,8 @@ const MerchantKYC = () => {
 };
 
 export default MerchantKYC;
+
+
+
+
+

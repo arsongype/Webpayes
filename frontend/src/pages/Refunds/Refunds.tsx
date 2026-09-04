@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import refundService, { type RefundDTO, type RefundRequest } from '../../services/refundService';
 import transactionService, { type Transaction } from '../../services/transactionService';
-import { useAuth } from '../../hooks/useAuth';
+
 
 const Refunds = () => {
-  const { user } = useAuth();
   const [refunds, setRefunds] = useState<RefundDTO[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +24,9 @@ const Refunds = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,3 +127,6 @@ const Refunds = () => {
 };
 
 export default Refunds;
+
+
+

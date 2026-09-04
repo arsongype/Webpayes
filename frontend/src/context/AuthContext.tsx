@@ -81,6 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback(
     async (payload: LoginPayload, options?: { redirectTo?: string; requireRole?: string[] }) => {
       const response = await authService.login(payload);
+      if (!response) {
+        throw new Error('Réponse de connexion invalide.');
+      }
       if (response.twoFactorRequired) {
         throw new Error('TWO_FACTOR_REQUIRED');
       }

@@ -21,7 +21,9 @@ const PaymentCategories = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,3 +146,4 @@ const PaymentCategories = () => {
 };
 
 export default PaymentCategories;
+

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, RefreshCw } from 'lucide-react';
 import { fetchTransactions } from '../../store/slices/transactionSlice';
+import type { Transaction } from '../../types/transaction.types';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import Button from '../../components/common/Button/Button';
 import api from '../../services/api';
@@ -36,9 +37,9 @@ const getStatusBadge = (status: string) => {
 
 const TransactionsList = () => {
   const dispatch = useAppDispatch();
-  const { transactions, loading, error } = useAppSelector((state) => state.transactions);
+  const { transactions, error } = useAppSelector((state) => state.transactions);
   const [searchReference, setSearchReference] = useState('');
-  const [searchResults, setSearchResults] = useState<any[] | null>(null);
+  const [searchResults, setSearchResults] = useState<Transaction[] | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
@@ -119,7 +120,7 @@ const TransactionsList = () => {
                     </td>
                   </tr>
                 ) : (
-                  displayList.map((tx: any) => (
+                  displayList.map((tx: Transaction) => (
                     <tr key={tx.id} className="transition hover:bg-slate-50 dark:hover:bg-white/5">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-mono text-cyan-600 dark:text-cyan-200">{tx.reference}</td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">

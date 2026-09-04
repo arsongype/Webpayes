@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import merchantService, { type MerchantProfileDTO, type MerchantProfileRequest } from '../../services/merchantService';
-import { useAuth } from '../../hooks/useAuth';
+
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 
 const MerchantProfile = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<MerchantProfileDTO | null>(null);
@@ -227,3 +226,5 @@ const MerchantProfile = () => {
 };
 
 export default MerchantProfile;
+
+

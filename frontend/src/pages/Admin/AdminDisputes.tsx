@@ -21,7 +21,9 @@ const AdminDisputes = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleStatusUpdate = async (id: string, status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED') => {
     try {
@@ -145,3 +147,4 @@ const AdminDisputes = () => {
 };
 
 export default AdminDisputes;
+

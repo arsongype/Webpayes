@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import merchantService, { type MerchantAffiliationRequestDTO, type MerchantAffiliationRequestPageDTO } from '../../services/merchantService';
-import { Eye, Shield, FileText, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Shield, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AdminAffiliationRequests = () => {
   const [requests, setRequests] = useState<MerchantAffiliationRequestDTO[]>([]);
@@ -28,7 +28,9 @@ const AdminAffiliationRequests = () => {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   const handleApprove = async (id: string) => {
     try {
@@ -243,3 +245,4 @@ const AdminAffiliationRequests = () => {
 };
 
 export default AdminAffiliationRequests;
+

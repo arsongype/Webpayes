@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, ChevronLeft, CheckCircle2, Copy, KeyRound, Loader2, AlertTriangle } from 'lucide-react';
 import merchantService, { type TwoFactorSetupResponse, type TwoFactorStatusResponse } from '../../services/merchantService';
-import { useToast } from '../../components/common/Toast/ToastContainer';
+import { useToast } from '../../components/common/Toast/useToast';
 
 const TwoFactorSettings = () => {
   const toast = useToast();
@@ -14,18 +14,19 @@ const TwoFactorSettings = () => {
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
 
-  const loadStatus = async () => {
+  const loadStatus = useCallback(async () => {
     try {
       const data = await merchantService.get2faStatus();
       setStatus(data);
     } catch {
       toast.addToast({ type: 'error', title: 'Erreur', message: 'Impossible de charger le statut 2FA.', duration: 6000 });
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadStatus();
-  }, []);
+  }, [loadStatus]);
 
   const handleSetup = async () => {
     setLoading(true);
@@ -54,7 +55,7 @@ const TwoFactorSettings = () => {
       setSetupStep('recovery');
       await loadStatus();
       toast.addToast({ type: 'success', title: '2FA activée', message: 'Authentification à deux facteurs activée avec succès.', duration: 6000 });
-    } catch (err: any) {
+    } catch (err) {
       toast.addToast({ type: 'error', title: 'Erreur', message: err?.response?.data?.message || 'Code invalide.', duration: 6000 });
     } finally {
       setLoading(false);
@@ -211,3 +212,8 @@ const TwoFactorSettings = () => {
 };
 
 export default TwoFactorSettings;
+
+
+
+
+

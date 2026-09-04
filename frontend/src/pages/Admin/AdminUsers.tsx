@@ -43,6 +43,7 @@ const AdminUsers = () => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh();
   }, [refresh]);
 
@@ -266,3 +267,4 @@ const AdminUsers = () => {
 };
 
 export default AdminUsers;
+

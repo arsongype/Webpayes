@@ -83,6 +83,10 @@ const userService = {
     const resp = await api.get('/users/me/login-history');
     return resp.data as LoginHistoryEntry[];
   },
+  verifyEmail: async (): Promise<UserDTO> => {
+    const resp = await api.post('/users/me/verify-email');
+    return resp.data as UserDTO;
+  },
 };
 
 export default userService;

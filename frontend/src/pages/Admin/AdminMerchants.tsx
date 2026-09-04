@@ -4,7 +4,7 @@ import merchantService, { type MerchantProfileDTO } from '../../services/merchan
 
 const AdminMerchants = () => {
   const location = useLocation();
-  const searchResults = (location.state as any)?.searchResults;
+  const searchResults = (location.state as { searchResults?: MerchantProfileDTO[] } | null)?.searchResults;
   const [profiles, setProfiles] = useState<MerchantProfileDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

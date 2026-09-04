@@ -8,7 +8,6 @@ import Navbar from './components/layout/Navbar';
 import Sidebar from './components/layout/Sidebar';
 import NavbarMobile from './components/layout/NavbarMobile';
 import Footer from './components/layout/Footer';
-import NotificationLoader from './pages/Notification/NotificationLoader';
 import ToastContainer, { type Toast } from './components/common/Toast/ToastContainer';
 import { store } from './store/store';
 import { useAuth } from './hooks/useAuth';

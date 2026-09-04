@@ -86,7 +86,7 @@ const Login = () => {
             </div>
 
             <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-              {!requiresTwoFactor && (
+              {requiresTwoFactor && (
                 <div className="rounded-xl border border-cyan-400/30 bg-cyan-500/10 p-3 text-sm text-cyan-800 dark:text-cyan-200">
                   <div className="flex items-center gap-2">
                     <Shield size={16} className="flex-shrink-0" />

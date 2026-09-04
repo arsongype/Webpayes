@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus, AlertCircle, Loader2 } from 'lucide-react';
 import { fetchTransactions, fetchStats } from '../../store/slices/transactionSlice';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import accountService from '../../services/accountService';
 import walletService from '../../services/walletService';
-import { useToast } from '../../components/common/Toast/ToastContainer';
+import { useToast } from '../../components/common/Toast/useToast';
 import BalanceChart from '../../components/charts/BalanceChart';
 import type { AccountDTO } from '../../types/account.types';
 import type { WalletTransactionDTO } from '../../types/wallet.types';
@@ -19,6 +19,9 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState<WalletTransactionDTO[]>([]);
   const [creatingAccount, setCreatingAccount] = useState(false);
   const [accountChecked, setAccountChecked] = useState(false);
+  const updateUserRef = useRef(updateUser);
+  // eslint-disable-next-line react-hooks/refs
+  updateUserRef.current = updateUser;
 
   useEffect(() => {
     dispatch(fetchStats());
@@ -31,8 +34,8 @@ const Dashboard = () => {
         const accs = await accountService.list();
         setAccounts(accs);
         if (accs.length > 0) {
-          if (updateUser && accs[0].accountNumber) {
-            updateUser({ accountNumber: accs[0].accountNumber });
+          if (updateUserRef.current && accs[0].accountNumber) {
+            updateUserRef.current({ accountNumber: accs[0].accountNumber });
           }
           const hist = await walletService.getHistory(accs[0].id);
           setTransactions(hist);
@@ -60,7 +63,7 @@ const Dashboard = () => {
         message: `Votre compte ${newAcc.accountNumber} a été créé avec succès.`,
         duration: 6000,
       });
-    } catch (err: any) {
+    } catch (err) {
       toast.addToast({
         type: 'error',
         title: 'Erreur',
@@ -146,3 +149,7 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
+
