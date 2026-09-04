@@ -22,6 +22,7 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Power,
 } from 'lucide-react';
 import merchantApiKeyService, {
   type ApiKeyListResponse,
@@ -237,7 +238,7 @@ const MerchantPortal = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/20 to-slate-100 px-4 py-6 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
+    <div className="bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header moderne */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

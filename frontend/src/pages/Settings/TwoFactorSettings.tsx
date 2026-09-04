@@ -56,7 +56,8 @@ const TwoFactorSettings = () => {
       await loadStatus();
       toast.addToast({ type: 'success', title: '2FA activée', message: 'Authentification à deux facteurs activée avec succès.', duration: 6000 });
     } catch (err) {
-      toast.addToast({ type: 'error', title: 'Erreur', message: err?.response?.data?.message || 'Code invalide.', duration: 6000 });
+      const axiosError = err as { response?: { data?: { message?: string } } } | null | undefined;
+      toast.addToast({ type: 'error', title: 'Erreur', message: axiosError?.response?.data?.message || 'Code invalide.', duration: 6000 });
     } finally {
       setLoading(false);
     }

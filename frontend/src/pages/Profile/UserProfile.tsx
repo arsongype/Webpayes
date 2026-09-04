@@ -455,21 +455,26 @@ const UserProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 text-slate-900 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-50">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold">Mon profil</h1>
-            <p className="mt-2 text-slate-500 dark:text-slate-400">
-              Gérez vos informations personnelles, la sécurité et vos préférences
-            </p>
-          </div>
-          <div className="flex gap-2">
+    <div className="bg-slate-100 px-4 py-6 text-slate-900 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-50">
+      <div className="mx-auto max-w-6xl">
+        {/* Hero header */}
+        <div className="relative mb-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/60 sm:p-8">
+          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-500/10 blur-2xl" />
+          <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-400">
+                Mon espace
+              </p>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Mon profil</h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Gérez vos informations personnelles, la sécurité et vos préférences
+              </p>
+            </div>
             <button
               type="button"
               onClick={exportData}
               disabled={!profile}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-slate-800/80 dark:text-slate-200 dark:hover:bg-slate-800"
               title="Exporter mes données (RGPD)"
             >
               <Download size={16} aria-hidden="true" />
@@ -480,20 +485,21 @@ const UserProfile = () => {
 
         {message && (
           <div
-            className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${
+            className={`mb-5 flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm shadow-sm ${
               message.type === 'success'
-                ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-200'
-                : 'border-rose-400/30 bg-rose-500/10 text-rose-600 dark:text-rose-200'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300'
+                : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300'
             }`}
             role="alert"
             aria-live="assertive"
           >
-            {message.text}
+            {message.type === 'success' ? <Check className="h-4 w-4 flex-shrink-0" /> : <X className="h-4 w-4 flex-shrink-0" />}
+            <span>{message.text}</span>
           </div>
         )}
 
-        <div className="overflow-hidden rounded-4xl border border-slate-200 bg-white/80 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-          <div className="grid gap-0 lg:grid-cols-[280px_1fr]">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+          <div className="grid gap-0 lg:grid-cols-[300px_1fr]">
             <aside className="border-b border-slate-200 bg-slate-50/50 p-6 lg:border-b-0 lg:border-r dark:border-white/10 dark:bg-slate-900/50">
               <div className="flex flex-col items-center text-center">
                 <div className="relative">
@@ -573,7 +579,7 @@ const UserProfile = () => {
                       onClick={() => setActiveTab(t.key)}
                       className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                         active
-                          ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/20'
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md shadow-cyan-500/20'
                           : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800/50'
                       }`}
                       aria-current={active ? 'page' : undefined}
@@ -871,7 +877,7 @@ interface PersonalTabProps {
 type FieldProps = {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>;
+  icon: React.ElementType;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;

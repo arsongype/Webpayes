@@ -26,16 +26,16 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { isAuthenticated } = useAuth();
   const refreshRef = useRef<() => void>(() => {});
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<void> => {
     try {
       const data = await notificationService.list();
       setNotifications(data);
       for (const n of data) {
         if (!shownIds.current.has(n.id) && !n.read) {
           shownIds.current.add(n.id);
-          const toastType = TYPE_MAP[n.type] ?? 'info';
+          const toastType = TYPE_MAP[n.type as NotificationType] ?? 'info';
           if (typeof window !== 'undefined' && (window as unknown as { showToast?: (t: { type: ToastType; title: string; message: string; duration: number }) => void }).showToast) {
-            (window as unknown as { showToast?: (t: { type: ToastType; title: string; message: string; duration: number }) => void }).showToast({
+            (window as unknown as { showToast?: (t: { type: ToastType; title: string; message: string; duration: number }) => void }).showToast?.({
               type: toastType,
               title: n.subject,
               message: n.body,
@@ -71,9 +71,9 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     refreshRef.current();
   }, [isAuthenticated]);
 
-  const unreadCount = notifications.filter((n) => !n.read && new Date(n.createdAt).getTime() > lastReadAt).length;
+  const unreadCount = notifications.filter((n) => !n.read && n.createdAt && new Date(n.createdAt).getTime() > lastReadAt).length;
 
-  const markAllRead = useCallback(() => {
+  const markAllRead = useCallback(async (): Promise<void> => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setLastReadAt(Date.now());
   }, []);

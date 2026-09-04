@@ -22,6 +22,13 @@ export interface PaymentMethodRequest {
   isFavorite?: boolean;
 }
 
+export interface PaymentMethodCategoryDTO {
+  id: string;
+  name: string;
+  description?: string;
+  icon?: string;
+}
+
 const paymentMethodService = {
   list: async (): Promise<PaymentMethodDTO[]> => {
     const resp = await api.get('/payment-methods');
@@ -41,6 +48,25 @@ const paymentMethodService = {
   toggleFavorite: async (id: string): Promise<PaymentMethodDTO> => {
     const resp = await api.post(`/payment-methods/${id}/favorite`);
     return resp.data;
+  },
+  listCategories: async (): Promise<PaymentMethodCategoryDTO[]> => {
+    try {
+      const resp = await api.get('/payment-method-categories');
+      return resp.data ?? [];
+    } catch {
+      return [];
+    }
+  },
+  createCategory: async (payload: { name: string; description?: string; icon?: string }): Promise<PaymentMethodCategoryDTO> => {
+    const resp = await api.post('/payment-method-categories', payload);
+    return resp.data;
+  },
+  updateCategory: async (id: string, payload: { name: string; description?: string; icon?: string }): Promise<PaymentMethodCategoryDTO> => {
+    const resp = await api.put(`/payment-method-categories/${id}`, payload);
+    return resp.data;
+  },
+  deleteCategory: async (id: string): Promise<void> => {
+    await api.delete(`/payment-method-categories/${id}`);
   },
 };
 

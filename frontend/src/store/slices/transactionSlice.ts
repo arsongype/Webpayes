@@ -5,7 +5,7 @@ import type { Transaction, TransferRequest } from '../../types/transaction.types
 interface TransactionState {
   transactions: Transaction[];
   currentTransaction: Transaction | null;
-  stats: { total: number; completed: number; pending: number } | null;
+  stats: { total: number; completed: number; pending: number; failed: number } | null;
   loading: boolean;
   error: string | null;
 }

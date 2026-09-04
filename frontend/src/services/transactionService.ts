@@ -22,9 +22,9 @@ const transactionService = {
     return response.data as Transaction;
   },
 
-  getStats: async (): Promise<{ total: number; completed: number; pending: number }> => {
+  getStats: async (): Promise<{ total: number; completed: number; pending: number; failed: number }> => {
     const response = await api.get('/transactions/stats');
-    return response.data as { total: number; completed: number; pending: number };
+    return response.data as { total: number; completed: number; pending: number; failed: number };
   },
 
   getMerchantSales: async (): Promise<{ total: number; count: number; from: string; to: string }> => {

@@ -18,7 +18,7 @@ export type AuthUser = TokenPayload & {
 export interface AuthContextType {
   user: AuthUser | null;
   login: (payload: { email: string; password: string }, options?: { redirectTo?: string; requireRole?: string[] }) => Promise<void>;
-  register: (payload: { firstName: string; lastName: string; email: string; password: string }) => Promise<void>;
+  register: (payload: Record<string, unknown>) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   loginWithGoogle: () => void;

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import {
   CreditCard,
   Smartphone,
@@ -195,7 +195,7 @@ const PaymentPage = () => {
   }, [cardBrand]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/30 to-slate-100 px-4 py-8 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
+    <div className="bg-slate-100 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         {/* En-tête moderne */}
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -732,13 +732,14 @@ const DetailItem = ({
   mono,
   highlight,
   badge,
+  children,
 }: {
   label: string;
   value?: string;
   mono?: boolean;
   highlight?: boolean;
   badge?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) => (
   <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-slate-800/50">
     <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">

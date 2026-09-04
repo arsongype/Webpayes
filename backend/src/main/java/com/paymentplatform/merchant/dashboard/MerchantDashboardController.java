@@ -35,12 +35,21 @@ public class MerchantDashboardController {
     private final AccountRepository accountRepository;
 
     @GetMapping("/analytics")
-    public ResponseEntity<AnalyticsResponse> getAnalytics(
+    public ResponseEntity<?> getAnalytics(
             @RequestParam(defaultValue = "7") int days) {
         UUID userId = currentUserService.getCurrentUserId();
         Account account = accountRepository.findByUserId(userId).orElse(null);
         if (account == null) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(AnalyticsResponse.builder()
+                    .totalVolume(BigDecimal.ZERO)
+                    .totalTransactions(0)
+                    .completedTransactions(0)
+                    .pendingTransactions(0)
+                    .failedTransactions(0)
+                    .successRate(0.0)
+                    .dailyVolumes(new ArrayList<>())
+                    .methodBreakdown(new ArrayList<>())
+                    .build());
         }
 
         Instant now = Instant.now();

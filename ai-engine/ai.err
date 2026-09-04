@@ -1,6 +1,6 @@
 WARNING:ai-engine:Redis not available: 'NoneType' object has no attribute 'Redis' — running in fallback mode
 INFO:ai-engine:AI models trained on 2000 samples (fraud rate: 3.85%)
-INFO:     Started server process [3400]
+INFO:     Started server process [19044]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)

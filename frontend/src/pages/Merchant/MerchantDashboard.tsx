@@ -41,9 +41,26 @@ const MerchantDashboard = () => {
     setLoading(true);
     try {
       const resp = await api.get(`/merchant/dashboard/analytics?days=${days}`);
+      // Handle 204 No Content (no account)
+      if (resp.status === 204 || !resp.data) {
+        setAnalytics(null);
+        return;
+      }
       setAnalytics(resp.data);
-    } catch {
-      toast.addToast({ type: 'error', title: 'Erreur', message: 'Impossible de charger les analyses.', duration: 6000 });
+    } catch (err) {
+      // Don't show error for 204 (no account = no analytics)
+      const axiosError = err as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosError?.response?.status === 204) {
+        setAnalytics(null);
+        return;
+      }
+      // Don't show error if user has no merchant profile
+      if (axiosError?.response?.status === 404) {
+        setAnalytics(null);
+        return;
+      }
+      const message = axiosError?.response?.data?.message ?? 'Impossible de charger les analyses.';
+      toast.addToast({ type: 'error', title: 'Erreur', message, duration: 6000 });
     } finally {
       setLoading(false);
     }
@@ -52,11 +69,20 @@ const MerchantDashboard = () => {
   const loadRecent = useCallback(async () => {
     try {
       const resp = await api.get(`/merchant/dashboard/recent-transactions?limit=10`);
-      setRecentTx(resp.data);
-    } catch {
-      toast.addToast({ type: 'error', title: 'Erreur', message: 'Impossible de charger les transactions.', duration: 6000 });
+      if (resp.status === 204) {
+        setRecentTx([]);
+        return;
+      }
+      setRecentTx(resp.data ?? []);
+    } catch (err) {
+      const axiosError = err as { response?: { status?: number; data?: { message?: string } } };
+      if (axiosError?.response?.status === 404) {
+        setRecentTx([]);
+        return;
+      }
+      // Silently fail for recent transactions
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -67,7 +93,7 @@ const MerchantDashboard = () => {
   const maxVolume = analytics ? Math.max(...analytics.dailyVolumes.map((d) => d.volume), 1) : 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/20 to-slate-100 px-4 py-6 text-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
+    <div className="bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         {/* Header */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

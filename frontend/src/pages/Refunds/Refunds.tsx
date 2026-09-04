@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import refundService, { type RefundDTO, type RefundRequest } from '../../services/refundService';
-import transactionService, { type Transaction } from '../../services/transactionService';
+import transactionService from '../../services/transactionService';
+import type { Transaction } from '../../types/transaction.types';
 
 
 const Refunds = () => {
@@ -16,7 +17,7 @@ const Refunds = () => {
     try {
       const [r, t] = await Promise.all([refundService.list(), transactionService.list(0, 100)]);
       setRefunds(r);
-      setTransactions(t.content || []);
+      setTransactions(t);
     } catch {
       setError('Impossible de charger les remboursements.');
     } finally {

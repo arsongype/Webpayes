@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import merchantService, { type MerchantProfileDTO } from '../../services/merchantService';
 
@@ -10,24 +10,27 @@ const AdminMerchants = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        let data: MerchantProfileDTO[];
-        if (searchResults) {
-          data = searchResults;
-        } else {
-          data = await merchantService.listAll();
-        }
-        setProfiles(data);
-      } catch {
-        setError('Impossible de charger les marchands.');
-      } finally {
-        setLoading(false);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      let data: MerchantProfileDTO[];
+      if (searchResults) {
+        data = searchResults;
+      } else {
+        data = await merchantService.listAll();
       }
-    };
-    load();
+      setProfiles(data);
+    } catch {
+      setError('Impossible de charger les marchands.');
+    } finally {
+      setLoading(false);
+    }
   }, [searchResults]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
 
   const handleApprove = async (id: string) => {
     try {

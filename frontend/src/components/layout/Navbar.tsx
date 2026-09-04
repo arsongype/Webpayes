@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../context/useNotification';
-import { Sun, Moon, Menu, X, Bell, CheckCheck } from 'lucide-react';
+import { Sun, Moon, Menu, X, Bell, CheckCheck, Search } from 'lucide-react';
 
 export const Navbar = () => {
   const { theme, toggleTheme } = useTheme();

@@ -83,7 +83,7 @@ const PaymentMethods = () => {
               <h1 className="mt-2 text-3xl font-semibold">Moyens de paiement</h1>
             </div>
             <button
-              onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ categoryId: '', type: 'CARD' }); }}
+              onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ type: 'CARD' }); }}
               className="rounded-2xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-400"
             >
               {showForm ? 'Annuler' : 'Ajouter'}

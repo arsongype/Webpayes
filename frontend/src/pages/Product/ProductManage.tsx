@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit, Trash2 } from 'lucide-react';
-import productService, { type ProductDTO, type ProductRequest } from '../../services/productService';
+import productService from '../../services/productService';
+import type { ProductDTO, ProductRequest } from '../../types/product.types';
 import Button from '../../components/common/Button/Button';
 import Modal from '../../components/common/Modal/Modal';
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';

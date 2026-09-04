@@ -100,7 +100,7 @@ const TwoFactorSetup = () => {
       scannerRef.current = new Html5QrcodeScanner('qr-reader', {
         qrbox: { width: 250, height: 250 },
         fps: 5,
-      });
+      }, false);
       scannerRef.current.render(handleScanSuccess, (errorMessage) => {
         console.warn('QR scan error:', errorMessage);
       });

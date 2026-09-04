@@ -126,8 +126,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const register = useCallback(
-    async (payload: RegisterPayload) => {
-      await authService.register(payload);
+    async (payload: Record<string, unknown>) => {
+      await authService.register(payload as unknown as RegisterPayload);
       navigate('/login', { replace: true });
     },
     [navigate],

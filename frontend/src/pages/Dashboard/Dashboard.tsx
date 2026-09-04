@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Plus, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, AlertCircle, Loader2, ArrowUpRight, ArrowDownLeft, TrendingUp, Activity, Clock, CheckCircle2, XCircle, Receipt } from 'lucide-react';
 import { fetchTransactions, fetchStats } from '../../store/slices/transactionSlice';
 import { useAuth } from '../../hooks/useAuth';
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
@@ -64,10 +64,12 @@ const Dashboard = () => {
         duration: 6000,
       });
     } catch (err) {
+      const axiosError = err as { response?: { data?: { message?: string } } } | null | undefined;
+      const message = axiosError?.response?.data?.message ?? 'Impossible de créer le compte.';
       toast.addToast({
         type: 'error',
         title: 'Erreur',
-        message: err?.response?.data?.message ?? 'Impossible de créer le compte.',
+        message,
         duration: 6000,
       });
     } finally {
@@ -75,71 +77,179 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 sm:px-6 lg:px-8 dark:bg-slate-950 dark:text-slate-50">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="rounded-4xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur dark:border-white/10 dark:bg-slate-900/70">
-          <p className="text-sm uppercase tracking-[0.3em] text-cyan-600/80 dark:text-cyan-300/80">Dashboard</p>
-          <h1 className="mt-3 text-2xl font-semibold sm:text-3xl lg:text-4xl">
-            Bienvenue{user?.firstName ? `, ${user.firstName}` : ''}
-          </h1>
-          <p className="mt-3 text-sm text-slate-500 dark:text-slate-300 sm:text-base">
-            Gérez vos comptes, effectuez des transferts et consultez votre historique.
-          </p>
+  const account = accounts[0];
+  const balance = account ? Number(account.balance) : 0;
+  const txIcon = (type: string) => {
+    if (type === 'CREDIT' || type === 'DEPOSIT') return <ArrowDownLeft className="h-4 w-4" />;
+    return <ArrowUpRight className="h-4 w-4" />;
+  };
+  const txColor = (type: string) => {
+    if (type === 'CREDIT' || type === 'DEPOSIT') return 'text-emerald-600 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/20';
+    return 'text-rose-600 dark:text-rose-300 bg-rose-100 dark:bg-rose-500/20';
+  };
 
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-white/10 dark:bg-slate-800/50">
-              <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Transactions</p>
-              <p className="mt-1 text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">
-                {loading ? '...' : stats?.total ?? 0}
+  return (
+    <div className="bg-slate-100 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-5">
+        {/* Hero header */}
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/60 sm:p-8">
+          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-500/10 blur-2xl" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-400">
+                Tableau de bord
+              </p>
+              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+                Bienvenue{user?.firstName ? `, ${user.firstName}` : ''} 👋
+              </h1>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Gérez vos comptes, effectuez des transferts et consultez votre historique.
               </p>
             </div>
-            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-center">
-              <p className="text-xs uppercase tracking-widest text-emerald-600 dark:text-emerald-300">Complétées</p>
-              <p className="mt-1 text-xl font-bold text-emerald-600 dark:text-emerald-300 sm:text-2xl">
-                {loading ? '...' : stats?.completed ?? 0}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-yellow-400/30 bg-yellow-500/10 p-4 text-center">
-              <p className="text-xs uppercase tracking-widest text-yellow-600 dark:text-yellow-300">En attente</p>
-              <p className="mt-1 text-xl font-bold text-yellow-600 dark:text-yellow-300 sm:text-2xl">
-                {loading ? '...' : stats?.pending ?? 0}
-              </p>
-            </div>
+            {account && (
+              <div className="rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-4 dark:border-cyan-500/20 dark:from-cyan-500/10 dark:to-blue-500/10">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
+                  Solde disponible
+                </p>
+                <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">
+                  {balance.toFixed(2)}{' '}
+                  <span className="text-sm font-medium text-slate-500">{account.currency}</span>
+                </p>
+                <p className="mt-0.5 font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                  {account.accountNumber}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Stats cards */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile
+            label="Transactions"
+            value={stats?.total ?? 0}
+            accent="from-cyan-500/10 to-cyan-500/0"
+            icon={Activity}
+            loading={loading}
+          />
+          <StatTile
+            label="Complétées"
+            value={stats?.completed ?? 0}
+            accent="from-emerald-500/10 to-emerald-500/0"
+            icon={CheckCircle2}
+            loading={loading}
+          />
+          <StatTile
+            label="En attente"
+            value={stats?.pending ?? 0}
+            accent="from-amber-500/10 to-amber-500/0"
+            icon={Clock}
+            loading={loading}
+          />
+          <StatTile
+            label="Échouées"
+            value={stats?.failed ?? 0}
+            accent="from-rose-500/10 to-rose-500/0"
+            icon={XCircle}
+            loading={loading}
+          />
+        </div>
+
+        {/* No account banner */}
         {accountChecked && accounts.length === 0 && (
-          <div className="rounded-4xl border border-amber-300/30 bg-amber-500/10 p-6 dark:border-amber-700/30">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-6 w-6 flex-shrink-0 text-amber-600 dark:text-amber-300" />
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold text-amber-800 dark:text-amber-200">Aucun compte attribué</h2>
-                <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                  Vous n'avez pas encore de compte financier. Créez-en un pour commencer à effectuer des transactions.
-                </p>
-                <button
-                  onClick={handleCreateAccount}
-                  disabled={creatingAccount}
-                  className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {creatingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus size={16} />}
-                  {creatingAccount ? 'Création...' : 'Créer mon compte'}
-                </button>
+          <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/5">
+            <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
+                <AlertCircle className="h-6 w-6 text-amber-700 dark:text-amber-300" />
               </div>
+              <div className="flex-1">
+                <h2 className="font-semibold text-amber-900 dark:text-amber-200">Aucun compte attribué</h2>
+                <p className="mt-0.5 text-sm text-amber-800 dark:text-amber-300/80">
+                  Créez un compte pour commencer à effectuer des transactions.
+                </p>
+              </div>
+              <button
+                onClick={handleCreateAccount}
+                disabled={creatingAccount}
+                className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-amber-400 disabled:opacity-50"
+              >
+                {creatingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus size={16} />}
+                {creatingAccount ? 'Création...' : 'Créer mon compte'}
+              </button>
             </div>
           </div>
         )}
 
-        {accounts.length > 0 && (
-          <div className="rounded-4xl border border-slate-200 bg-slate-50 p-6 dark:border-white/10 dark:bg-slate-800/50">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Solde et historique</h2>
-            <div className="mt-4">
-              <div className="text-sm text-slate-500 dark:text-slate-400">Compte: {accounts[0].accountNumber}</div>
-              <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{accounts[0].currency} {Number(accounts[0].balance).toFixed(2)}</div>
+        {/* Chart + recent transactions */}
+        {account && (
+          <div className="grid gap-5 lg:grid-cols-3">
+            {/* Chart */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900/60 lg:col-span-2">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-base font-semibold">
+                    <TrendingUp className="h-4 w-4 text-cyan-500" />
+                    Évolution du solde
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Historique de vos transactions
+                  </p>
+                </div>
+                <span className="rounded-full bg-cyan-50 px-2.5 py-0.5 text-[10px] font-semibold text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
+                  {transactions.length} op.
+                </span>
+              </div>
+              <BalanceChart transactions={transactions} currency={account.currency} />
             </div>
-            <div className="mt-6">
-              <BalanceChart transactions={transactions} currency={accounts[0].currency} />
+
+            {/* Recent transactions */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-base font-semibold">
+                  <Receipt className="h-4 w-4 text-emerald-500" />
+                  Opérations récentes
+                </h2>
+                <span className="text-xs text-slate-400">Top 5</span>
+              </div>
+              {transactions.length === 0 ? (
+                <p className="rounded-xl bg-slate-50 py-8 text-center text-sm text-slate-500 dark:bg-slate-800/50">
+                  Aucune opération pour le moment
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {transactions.slice(0, 5).map((tx) => {
+                    const isIncoming = tx.type === 'CREDIT' || tx.type === 'DEPOSIT';
+                    return (
+                      <div
+                        key={tx.id}
+                        className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-white/5 dark:bg-slate-800/40"
+                      >
+                        <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${txColor(tx.type)}`}>
+                          {txIcon(tx.type)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-slate-700 dark:text-slate-200">
+                            {tx.type}
+                          </p>
+                          <p className="text-[10px] text-slate-500">
+                            {tx.createdAt
+                              ? new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+                              : '—'}
+                          </p>
+                        </div>
+                        <p
+                          className={`text-sm font-bold tabular-nums ${
+                            isIncoming ? 'text-emerald-600 dark:text-emerald-300' : 'text-slate-900 dark:text-white'
+                          }`}
+                        >
+                          {isIncoming ? '+' : '-'}
+                          {Number(tx.amount).toFixed(2)} {account.currency}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -148,8 +258,31 @@ const Dashboard = () => {
   );
 };
 
+const StatTile = ({
+  label,
+  value,
+  accent,
+  icon: Icon,
+  loading,
+}: {
+  label: string;
+  value: string | number;
+  accent: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  loading: boolean;
+}) => (
+  <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900/60">
+    <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent}`} />
+    <div className="flex items-center justify-between">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        {label}
+      </p>
+      <Icon className="h-3.5 w-3.5 text-slate-400" />
+    </div>
+    <p className="mt-1.5 text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">
+      {loading ? '…' : value}
+    </p>
+  </div>
+);
+
 export default Dashboard;
-
-
-
-

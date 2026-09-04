@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -62,7 +63,7 @@ const ToastItem = ({ toast, onRemove }: ToastItemProps) => {
 
 interface ToastContainerProps {
   toasts: Toast[];
-  setToasts: (toasts: Toast[]) => void;
+  setToasts: Dispatch<SetStateAction<Toast[]>>;
 }
 
 export const ToastContainer = ({ toasts, setToasts }: ToastContainerProps) => {

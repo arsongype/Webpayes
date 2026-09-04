@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import refundService, { type DisputeDTO, type DisputeRequest } from '../../services/refundService';
-import transactionService, { type Transaction } from '../../services/transactionService';
+import transactionService from '../../services/transactionService';
+import type { Transaction } from '../../types/transaction.types';
 
 
 const Disputes = () => {
@@ -16,7 +17,7 @@ const Disputes = () => {
     try {
       const [d, t] = await Promise.all([refundService.listDisputes(), transactionService.list(0, 100)]);
       setDisputes(d);
-      setTransactions(t.content || []);
+      setTransactions(t);
     } catch {
       setError('Impossible de charger les litiges.');
     } finally {
