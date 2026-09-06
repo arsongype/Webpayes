@@ -23,8 +23,6 @@ export const NavbarMobile = () => {
 
   const adminItems = [
     { icon: Shield, label: 'Admin Dashboard', path: '/admin/dashboard' },
-    { icon: FileText, label: 'Demandes KYC', path: '/admin/affiliation-requests' },
-    { icon: Users, label: 'Marchands', path: '/admin/merchants' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

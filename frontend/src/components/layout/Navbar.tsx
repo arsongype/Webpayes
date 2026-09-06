@@ -39,10 +39,7 @@ export const Navbar = () => {
   }, []);
 
   const navLinks: { path: string; label: string }[] = [];
-  const adminNavLinks = [
-    { path: '/admin/affiliation-requests', label: 'Demandes KYC' },
-    { path: '/admin/merchants', label: 'Marchands' },
-  ];
+  const adminNavLinks: { path: string; label: string }[] = [];
   const activeNavLinks = isAdmin ? adminNavLinks : navLinks;
 
   return (
