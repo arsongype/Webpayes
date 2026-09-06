@@ -18,9 +18,9 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const token = localStorage.getItem('token');
 
-    if (status === 401) {
+    if (status === 401 || status === 403) {
       if (!token) {
-        return Promise.resolve({ data: null, status: 401, statusText: 'Unauthorized' });
+        return Promise.resolve({ data: null, status: status ?? 401, statusText: 'Unauthorized' });
       }
       localStorage.removeItem('token');
       if (typeof window !== 'undefined' && window.location.pathname !== '/login') {

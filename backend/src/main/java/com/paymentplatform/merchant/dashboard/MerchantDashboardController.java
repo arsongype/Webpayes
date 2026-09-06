@@ -2,8 +2,6 @@ package com.paymentplatform.merchant.dashboard;
 
 import com.paymentplatform.account.entity.Account;
 import com.paymentplatform.account.repository.AccountRepository;
-import com.paymentplatform.merchantprofile.entity.MerchantProfile;
-import com.paymentplatform.merchantprofile.repository.MerchantProfileRepository;
 import com.paymentplatform.security.CurrentUserService;
 import com.paymentplatform.transaction.TransactionStatus;
 import com.paymentplatform.transaction.entity.Transaction;
@@ -31,7 +29,6 @@ public class MerchantDashboardController {
 
     private final CurrentUserService currentUserService;
     private final TransactionRepository transactionRepository;
-    private final MerchantProfileRepository merchantProfileRepository;
     private final AccountRepository accountRepository;
 
     @GetMapping("/analytics")
@@ -40,16 +37,7 @@ public class MerchantDashboardController {
         UUID userId = currentUserService.getCurrentUserId();
         Account account = accountRepository.findByUserId(userId).orElse(null);
         if (account == null) {
-            return ResponseEntity.ok(AnalyticsResponse.builder()
-                    .totalVolume(BigDecimal.ZERO)
-                    .totalTransactions(0)
-                    .completedTransactions(0)
-                    .pendingTransactions(0)
-                    .failedTransactions(0)
-                    .successRate(0.0)
-                    .dailyVolumes(new ArrayList<>())
-                    .methodBreakdown(new ArrayList<>())
-                    .build());
+            return ResponseEntity.noContent().build();
         }
 
         Instant now = Instant.now();
@@ -76,7 +64,6 @@ public class MerchantDashboardController {
                 .filter(tx -> tx.getStatus() == TransactionStatus.FAILED)
                 .count();
 
-        // Group by day
         Map<String, BigDecimal> dailyVolume = transactions.stream()
                 .filter(tx -> tx.getAmount() != null && tx.getCreatedAt() != null)
                 .collect(Collectors.groupingBy(
@@ -91,13 +78,12 @@ public class MerchantDashboardController {
             dailyVolumes.add(new DailyVolume(day.toString(), vol));
         }
 
-        // Group by payment method
         Map<String, Long> methodCounts = transactions.stream()
                 .filter(tx -> tx.getAmount() != null)
                 .collect(Collectors.groupingBy(
                         tx -> tx.getMetadata() != null && tx.getMetadata().contains("CARD") ? "card"
                                 : tx.getMetadata() != null && tx.getMetadata().contains("MOBILE") ? "mobile_money"
-                                : tx.getAmount() != null ? "internal" : "unknown",
+                                : tx.getMetadata() != null ? "internal" : "unknown",
                         Collectors.counting()
                 ));
 

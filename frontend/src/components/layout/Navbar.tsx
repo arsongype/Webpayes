@@ -38,11 +38,7 @@ export const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navLinks = [
-    { path: '/payment', label: 'Paiement' },
-    { path: '/merchant/portal', label: 'Portail Marchand' },
-  ];
-
+  const navLinks: { path: string; label: string }[] = [];
   const adminNavLinks = [
     { path: '/admin/affiliation-requests', label: 'Demandes KYC' },
     { path: '/admin/merchants', label: 'Marchands' },
