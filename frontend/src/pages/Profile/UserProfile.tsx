@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -94,6 +94,11 @@ const UserProfile = () => {
   const [twoFactorDisableCodeTouched, setTwoFactorDisableCodeTouched] = useState(false);
   const [twoFactorDisableMode, setTwoFactorDisableMode] = useState<'code' | 'recovery'>('code');
   const [profileRecoveryCodes, setProfileRecoveryCodes] = useState<string[]>([]);
+
+  const onClosePasswordModal = useCallback(() => setShowPasswordModal(false), []);
+  const onCloseKycModal = useCallback(() => setShowKycModal(false), []);
+  const onCloseTwoFactorDisableModal = useCallback(() => setShowTwoFactorDisableModal(false), []);
+  const onCloseRecoveryCodesModal = useCallback(() => setShowRecoveryCodesModal(false), []);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loginHistory, setLoginHistory] = useState<LoginHistoryEntry[]>([]);
   const [showAccountNumber, setShowAccountNumber] = useState(false);
@@ -413,8 +418,9 @@ const UserProfile = () => {
     setLoadingRoute(true);
     try {
       const accountCurrency = profile?.account?.currency ?? 'MGA';
-      const accountBalance = profile?.account?.balance ?? 0;
-      const amount = accountBalance > 0 ? Math.min(100, Number(accountBalance)) : 100;
+      const rawBalance = profile?.account?.balance;
+      const accountBalance = typeof rawBalance === 'number' && !Number.isNaN(rawBalance) ? rawBalance : 0;
+      const amount = accountBalance > 0 ? Math.min(100, accountBalance) : 100;
       const userCountry = profile?.user.timezone?.startsWith('Europe/') ? 'FR'
         : profile?.user.timezone?.startsWith('Indian/') ? 'MG'
         : profile?.user.timezone?.startsWith('Africa/') ? 'KE'
@@ -669,7 +675,7 @@ const UserProfile = () => {
         </div>
       </div>
 
-      <Modal isOpen={showKycModal} onClose={() => setShowKycModal(false)} title="Vérification KYC">
+      <Modal isOpen={showKycModal} onClose={onCloseKycModal} title="Vérification KYC">
         <p className="text-sm text-slate-300">
           La vérification KYC permet de sécuriser votre compte et d'augmenter vos plafonds de paiement. Veuillez vous rendre sur la page dédiée.
         </p>
@@ -681,98 +687,27 @@ const UserProfile = () => {
         </a>
       </Modal>
 
-      <Modal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} title="Changer le mot de passe">
-        <div className="space-y-4">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">Mot de passe actuel</label>
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
-              <Lock size={18} className="text-slate-400" aria-hidden="true" />
-              <input
-                type={showCurrentPassword ? 'text' : 'password'}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-transparent text-white outline-none"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPassword((v) => !v)}
-                className="text-slate-400 hover:text-slate-200"
-                aria-label={showCurrentPassword ? 'Masquer' : 'Afficher'}
-              >
-                {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">Nouveau mot de passe</label>
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
-              <KeyRound size={18} className="text-slate-400" aria-hidden="true" />
-              <input
-                type={showNewPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-transparent text-white outline-none"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowNewPassword((v) => !v)}
-                className="text-slate-400 hover:text-slate-200"
-                aria-label={showNewPassword ? 'Masquer' : 'Afficher'}
-              >
-                {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-            {newPassword && (
-              <div className="mt-2">
-                <div className="flex items-center justify-between text-xs text-slate-300">
-                  <span>Force du mot de passe :</span>
-                  <span className="font-semibold">{passwordStrengthLabel}</span>
-                </div>
-                <div className="mt-1 flex gap-1">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className={`h-1.5 flex-1 rounded-full ${i < passwordStrength ? passwordStrengthColor : 'bg-slate-700'}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-300">Confirmer le nouveau mot de passe</label>
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
-              <Lock size={18} className="text-slate-400" aria-hidden="true" />
-              <input
-                type={showNewPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-transparent text-white outline-none"
-                placeholder="••••••••"
-              />
-              {confirmPassword && (
-                newPassword === confirmPassword ? (
-                  <Check size={16} className="text-emerald-400" />
-                ) : (
-                  <X size={16} className="text-rose-400" />
-                )
-              )}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleChangePassword}
-            disabled={saving}
-            className="w-full rounded-2xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {saving ? 'Modification...' : 'Modifier le mot de passe'}
-          </button>
-        </div>
-      </Modal>
+      <ChangePasswordModal
+        isOpen={showPasswordModal}
+        onClose={onClosePasswordModal}
+        saving={saving}
+        currentPassword={currentPassword}
+        newPassword={newPassword}
+        confirmPassword={confirmPassword}
+        showCurrentPassword={showCurrentPassword}
+        showNewPassword={showNewPassword}
+        onCurrentPasswordChange={setCurrentPassword}
+        onNewPasswordChange={setNewPassword}
+        onConfirmPasswordChange={setConfirmPassword}
+        onToggleCurrentPassword={() => setShowCurrentPassword((v) => !v)}
+        onToggleNewPassword={() => setShowNewPassword((v) => !v)}
+        onSubmit={handleChangePassword}
+        passwordStrength={passwordStrength}
+        passwordStrengthLabel={passwordStrengthLabel}
+        passwordStrengthColor={passwordStrengthColor}
+      />
 
-      <Modal isOpen={showTwoFactorDisableModal} onClose={() => setShowTwoFactorDisableModal(false)} title="Désactiver la 2FA">
+      <Modal isOpen={showTwoFactorDisableModal} onClose={onCloseTwoFactorDisableModal} title="Désactiver la 2FA">
         <form className="space-y-4" onSubmit={handleDisableTwoFactor}>
           <div className="flex rounded-2xl border border-slate-600 bg-slate-800 p-1">
             <button
@@ -827,7 +762,7 @@ const UserProfile = () => {
         </form>
       </Modal>
 
-      <Modal isOpen={showRecoveryCodesModal} onClose={() => setShowRecoveryCodesModal(false)} title="Codes de secours">
+      <Modal isOpen={showRecoveryCodesModal} onClose={onCloseRecoveryCodesModal} title="Codes de secours">
         <div className="space-y-4">
           <p className="text-sm text-slate-300">
             Conservez ces codes en lieu sûr. Vous pouvez les utiliser pour vous connecter si vous perdez votre téléphone.
@@ -1356,7 +1291,7 @@ const PreferencesTab = (p: PreferencesTabProps) => {
                 className="w-full bg-transparent text-slate-900 outline-none dark:text-slate-100"
               >
                 {LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code} className="text-slate-900">
+                  <option key={l.code} value={l.code} className="text-slate-900 dark:text-slate-100">
                     {l.label}
                   </option>
                 ))}
@@ -1376,7 +1311,7 @@ const PreferencesTab = (p: PreferencesTabProps) => {
                 className="w-full bg-transparent text-slate-900 outline-none dark:text-slate-100"
               >
                 {TIMEZONES.map((tz) => (
-                  <option key={tz} value={tz} className="text-slate-900">
+                  <option key={tz} value={tz} className="text-slate-900 dark:text-slate-100">
                     {tz}
                   </option>
                 ))}
@@ -1456,7 +1391,7 @@ const ToggleRow = ({ icon: Icon, title, description, checked, onChange }: Toggle
       }`}
     >
       <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition dark:bg-slate-900 ${
           checked ? 'translate-x-6' : 'translate-x-1'
         }`}
       />
@@ -1552,6 +1487,143 @@ const ActivityTab = (p: ActivityTabProps) => (
 );
 
 export default UserProfile;
+
+const ChangePasswordModal = memo(({
+  isOpen,
+  onClose,
+  saving,
+  currentPassword,
+  newPassword,
+  confirmPassword,
+  showCurrentPassword,
+  showNewPassword,
+  onCurrentPasswordChange,
+  onNewPasswordChange,
+  onConfirmPasswordChange,
+  onToggleCurrentPassword,
+  onToggleNewPassword,
+  onSubmit,
+  passwordStrength,
+  passwordStrengthLabel,
+  passwordStrengthColor,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  saving: boolean;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  showCurrentPassword: boolean;
+  showNewPassword: boolean;
+  onCurrentPasswordChange: (value: string) => void;
+  onNewPasswordChange: (value: string) => void;
+  onConfirmPasswordChange: (value: string) => void;
+  onToggleCurrentPassword: () => void;
+  onToggleNewPassword: () => void;
+  onSubmit: () => void;
+  passwordStrength: number;
+  passwordStrengthLabel: string;
+  passwordStrengthColor: string;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Changer le mot de passe">
+      <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-300">Mot de passe actuel</label>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
+            <Lock size={18} className="text-slate-400" aria-hidden="true" />
+            <input
+              type={showCurrentPassword ? 'text' : 'password'}
+              value={currentPassword}
+              onChange={(e) => onCurrentPasswordChange(e.target.value)}
+              className="w-full bg-transparent text-white outline-none"
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
+            <button
+              type="button"
+              onClick={onToggleCurrentPassword}
+              className="text-slate-400 hover:text-slate-200"
+              aria-label={showCurrentPassword ? 'Masquer' : 'Afficher'}
+            >
+              {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-300">Nouveau mot de passe</label>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
+            <KeyRound size={18} className="text-slate-400" aria-hidden="true" />
+            <input
+              type={showNewPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(e) => onNewPasswordChange(e.target.value)}
+              className="w-full bg-transparent text-white outline-none"
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={onToggleNewPassword}
+              className="text-slate-400 hover:text-slate-200"
+              aria-label={showNewPassword ? 'Masquer' : 'Afficher'}
+            >
+              {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {newPassword && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <span>Force du mot de passe :</span>
+                <span className="font-semibold">{passwordStrengthLabel}</span>
+              </div>
+              <div className="mt-1 flex gap-1">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 flex-1 rounded-full ${i < passwordStrength ? passwordStrengthColor : 'bg-slate-700'}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-300">Confirmer le nouveau mot de passe</label>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
+            <Lock size={18} className="text-slate-400" aria-hidden="true" />
+            <input
+              type={showNewPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => onConfirmPasswordChange(e.target.value)}
+              className="w-full bg-transparent text-white outline-none"
+              placeholder="••••••••"
+              autoComplete="new-password"
+            />
+            {confirmPassword && (
+              newPassword === confirmPassword ? (
+                <Check size={16} className="text-emerald-400" />
+              ) : (
+                <X size={16} className="text-rose-400" />
+              )
+            )}
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="w-full rounded-2xl bg-cyan-500 py-3 font-semibold text-white transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {saving ? 'Modification...' : 'Modifier le mot de passe'}
+        </button>
+      </form>
+    </Modal>
+  );
+});
+
+ChangePasswordModal.displayName = 'ChangePasswordModal';
 
 
 

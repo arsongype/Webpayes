@@ -27,4 +27,5 @@ public class TransactionDTO {
     private Double riskScore;
     private Instant createdAt;
     private Instant updatedAt;
+    private String type;
 }

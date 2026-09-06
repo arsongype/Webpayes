@@ -333,6 +333,10 @@ public class TransactionService {
         return transactionRepository.countByStatus(TransactionStatus.COMPLETED);
     }
 
+    public long countFailedTransactions() {
+        return transactionRepository.countByStatus(TransactionStatus.FAILED);
+    }
+
     private String buildMetadata(String description) {
         return "{\"description\":\"" + (description != null ? description.replace("\"", "'") : "") + "\"}";
     }

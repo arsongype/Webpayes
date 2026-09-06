@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../context/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../context/useNotification';
@@ -7,9 +7,8 @@ import { Sun, Moon, Menu, X, Bell, CheckCheck, Search } from 'lucide-react';
 
 export const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { notifications, unreadCount, markAllRead } = useNotifications();
-  const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -19,11 +18,6 @@ export const Navbar = () => {
 
   const handleAdminSearch = (e: React.FormEvent) => {
     e.preventDefault();
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -43,7 +37,7 @@ export const Navbar = () => {
   const activeNavLinks = isAdmin ? adminNavLinks : navLinks;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90 shadow-sm backdrop-blur">
+    <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur dark:border-white/10 dark:bg-slate-900/80 dark:shadow-none">
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -61,8 +55,8 @@ export const Navbar = () => {
                 to={link.path}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.path)
-                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                    ? 'bg-cyan-500/20 text-cyan-700 border border-cyan-500/30 dark:text-cyan-300 dark:border-cyan-500/30'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/5'
                 }`}
               >
                 {link.label}
@@ -77,7 +71,7 @@ export const Navbar = () => {
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={() => { setNotifOpen((v) => !v); if (!notifOpen) markAllRead(); }}
-                  className="relative p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 transition-colors"
+                  className="relative p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-300"
                   aria-label="Notifications"
                 >
                   <Bell size={20} />
@@ -89,12 +83,12 @@ export const Navbar = () => {
                 </button>
 
                 {notifOpen && (
-                  <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900">
+                  <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-white/10 dark:bg-slate-900 dark:shadow-2xl">
                     <div className="flex items-center justify-between border-b border-slate-200 p-3 dark:border-white/10">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</p>
                       <button
                         onClick={markAllRead}
-                        className="inline-flex items-center gap-1 text-xs text-cyan-600 hover:text-cyan-700 dark:text-cyan-300"
+                        className="inline-flex items-center gap-1 text-xs text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300"
                       >
                         <CheckCheck size={14} /> Tout marquer lu
                       </button>
@@ -106,10 +100,10 @@ export const Navbar = () => {
                       {notifications.map((n) => (
                         <div
                           key={n.id}
-                          className={`p-3 text-sm ${n.read ? 'opacity-70' : 'bg-slate-50 dark:bg-slate-800/50'}`}
+                          className={`p-3 text-sm ${n.read ? 'opacity-70' : 'bg-slate-50 dark:bg-white/5'}`}
                         >
                           <p className="font-medium text-slate-900 dark:text-white">{n.subject}</p>
-                          <p className="text-slate-500 dark:text-slate-300 line-clamp-2">{n.body}</p>
+                          <p className="text-slate-500 line-clamp-2 dark:text-slate-400">{n.body}</p>
                           {n.createdAt && (
                             <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                               {new Date(n.createdAt).toLocaleString()}
@@ -127,16 +121,16 @@ export const Navbar = () => {
             {isAuthenticated && (
               <Link
                 to="/profile"
-                className="flex items-center gap-2 rounded-full p-1 pr-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex items-center gap-2 rounded-full p-1 pr-3 transition-colors hover:bg-slate-100 dark:hover:bg-white/5"
               >
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
                     alt="Profil"
-                    className="h-9 w-9 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                    className="h-9 w-9 rounded-full object-cover border border-slate-200 dark:border-white/10"
                   />
                 ) : (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/20 font-semibold text-cyan-700 dark:text-cyan-200">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-cyan-500/20 font-semibold text-cyan-700 dark:text-cyan-300">
                     {user?.firstName?.[0]?.toUpperCase() ?? 'U'}
                   </div>
                 )}
@@ -149,7 +143,7 @@ export const Navbar = () => {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-yellow-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-yellow-300 transition-colors"
+              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-300"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -159,7 +153,7 @@ export const Navbar = () => {
             {isAuthenticated && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300"
+                className="md:hidden p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-300"
               >
                 {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -169,7 +163,7 @@ export const Navbar = () => {
 
         {/* Mobile Navigation (below md) */}
         {mobileMenuOpen && isAuthenticated && (
-          <div className="md:hidden border-t border-slate-200 dark:border-slate-800 pb-4">
+          <div className="md:hidden border-t border-slate-200 pb-4 dark:border-white/10">
             <div className="pt-4 space-y-2">
               {isAdmin && (
                 <form onSubmit={handleAdminSearch} className="px-4 mb-3">
@@ -179,7 +173,7 @@ export const Navbar = () => {
                       value={adminSearch}
                       onChange={(e) => setAdminSearch(e.target.value)}
                       placeholder="Rechercher marchand..."
-                      className="flex-1 rounded-l-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
+                      className="flex-1 rounded-l-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
                     />
                     <button
                       type="submit"
@@ -196,28 +190,13 @@ export const Navbar = () => {
                   to={link.path}
                   className={`block px-4 py-2 rounded-lg transition-colors ${
                     isActive(link.path)
-                      ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-medium'
-                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                      ? 'bg-cyan-500/20 text-cyan-700 font-medium dark:text-cyan-300'
+                      : 'text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/5'
                   }`}
-                  onClick={() => setMobileMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="border-t border-slate-200 mt-4 pt-4 dark:border-slate-800">
-                <p className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">
-                  {user?.firstName} {user?.lastName}
-                </p>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full mx-auto px-4 py-2 text-left rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
-                >
-                  Déconnexion
-                </button>
-              </div>
             </div>
           </div>
         )}

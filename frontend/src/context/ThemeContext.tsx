@@ -6,7 +6,7 @@ type ThemeMode = 'light' | 'dark';
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     const stored = localStorage.getItem('theme') as ThemeMode | null;
-    return stored || 'dark';
+    return stored || 'light';
   });
 
   useEffect(() => {

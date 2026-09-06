@@ -5,6 +5,7 @@ import com.paymentplatform.transaction.TransactionStatus;
 import com.paymentplatform.transaction.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.math.BigDecimal;
@@ -14,7 +15,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
+    @EntityGraph(attributePaths = {"senderAccount", "receiverAccount"})
     Page<Transaction> findBySenderAccountOrReceiverAccount(Account senderAccount, Account receiverAccount, Pageable pageable);
+
     Optional<Transaction> findByReference(String reference);
     long countByStatus(TransactionStatus status);
 

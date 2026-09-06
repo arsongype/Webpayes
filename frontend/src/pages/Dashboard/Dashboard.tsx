@@ -32,12 +32,13 @@ const Dashboard = () => {
     const load = async () => {
       try {
         const accs = await accountService.list();
-        setAccounts(accs);
-        if (accs.length > 0) {
-          if (updateUserRef.current && accs[0].accountNumber) {
-            updateUserRef.current({ accountNumber: accs[0].accountNumber });
+        const sorted = [...accs].sort((a, b) => Number(b.balance) - Number(a.balance));
+        setAccounts(sorted);
+        if (sorted.length > 0) {
+          if (updateUserRef.current && sorted[0].accountNumber) {
+            updateUserRef.current({ accountNumber: sorted[0].accountNumber });
           }
-          const hist = await walletService.getHistory(accs[0].id);
+          const hist = await walletService.getHistory(sorted[0].id);
           setTransactions(hist);
         }
       } catch {

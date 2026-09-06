@@ -173,7 +173,7 @@ const Wallet = () => {
                           setHistory([]);
                         }
                       }}
-                      className="w-1/3 rounded-3xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none"
+                      className="w-1/3 rounded-3xl border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none dark:border-white/10 dark:bg-slate-900 dark:text-slate-100"
                     >
                       <option value="none">Interne</option>
                       <option value="mvola">Mvola</option>

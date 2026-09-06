@@ -42,20 +42,31 @@ public class TransactionController {
 
         List<Transaction> transactions = transactionService.listTransactions(currentUserId, isAdmin, page, size);
         List<TransactionDTO> dtos = transactions.stream()
-            .map(tx -> TransactionDTO.builder()
-                .id(tx.getId())
-                .senderAccountId(tx.getSenderAccount().getId())
-                .receiverAccountId(tx.getReceiverAccount() != null ? tx.getReceiverAccount().getId() : null)
-                .amount(tx.getAmount())
-                .currency(tx.getCurrency())
-                .status(tx.getStatus())
-                .reference(tx.getReference())
-                .metadata(tx.getMetadata())
-                .fraudScore(tx.getFraudScore())
-                .riskScore(tx.getRiskScore())
-                .createdAt(tx.getCreatedAt())
-                .updatedAt(tx.getUpdatedAt())
-                .build())
+            .map(tx -> {
+                String type = "DEBIT";
+                if (tx.getSenderAccount() != null && tx.getSenderAccount().getUser() != null
+                        && tx.getSenderAccount().getUser().getId().equals(currentUserId)) {
+                    type = "DEBIT";
+                } else if (tx.getReceiverAccount() != null && tx.getReceiverAccount().getUser() != null
+                        && tx.getReceiverAccount().getUser().getId().equals(currentUserId)) {
+                    type = "CREDIT";
+                }
+                return TransactionDTO.builder()
+                    .id(tx.getId())
+                    .senderAccountId(tx.getSenderAccount().getId())
+                    .receiverAccountId(tx.getReceiverAccount() != null ? tx.getReceiverAccount().getId() : null)
+                    .amount(tx.getAmount())
+                    .currency(tx.getCurrency())
+                    .status(tx.getStatus())
+                    .reference(tx.getReference())
+                    .metadata(tx.getMetadata())
+                    .fraudScore(tx.getFraudScore())
+                    .riskScore(tx.getRiskScore())
+                    .createdAt(tx.getCreatedAt())
+                    .updatedAt(tx.getUpdatedAt())
+                    .type(type)
+                    .build();
+            })
             .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
@@ -71,20 +82,31 @@ public class TransactionController {
 
         List<Transaction> transactions = transactionService.searchTransactions(currentUserId, isAdmin, reference, status, from, to);
         List<TransactionDTO> dtos = transactions.stream()
-            .map(tx -> TransactionDTO.builder()
-                .id(tx.getId())
-                .senderAccountId(tx.getSenderAccount().getId())
-                .receiverAccountId(tx.getReceiverAccount() != null ? tx.getReceiverAccount().getId() : null)
-                .amount(tx.getAmount())
-                .currency(tx.getCurrency())
-                .status(tx.getStatus())
-                .reference(tx.getReference())
-                .metadata(tx.getMetadata())
-                .fraudScore(tx.getFraudScore())
-                .riskScore(tx.getRiskScore())
-                .createdAt(tx.getCreatedAt())
-                .updatedAt(tx.getUpdatedAt())
-                .build())
+            .map(tx -> {
+                String type = "DEBIT";
+                if (tx.getSenderAccount() != null && tx.getSenderAccount().getUser() != null
+                        && tx.getSenderAccount().getUser().getId().equals(currentUserId)) {
+                    type = "DEBIT";
+                } else if (tx.getReceiverAccount() != null && tx.getReceiverAccount().getUser() != null
+                        && tx.getReceiverAccount().getUser().getId().equals(currentUserId)) {
+                    type = "CREDIT";
+                }
+                return TransactionDTO.builder()
+                    .id(tx.getId())
+                    .senderAccountId(tx.getSenderAccount().getId())
+                    .receiverAccountId(tx.getReceiverAccount() != null ? tx.getReceiverAccount().getId() : null)
+                    .amount(tx.getAmount())
+                    .currency(tx.getCurrency())
+                    .status(tx.getStatus())
+                    .reference(tx.getReference())
+                    .metadata(tx.getMetadata())
+                    .fraudScore(tx.getFraudScore())
+                    .riskScore(tx.getRiskScore())
+                    .createdAt(tx.getCreatedAt())
+                    .updatedAt(tx.getUpdatedAt())
+                    .type(type)
+                    .build();
+            })
             .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
@@ -111,15 +133,16 @@ public class TransactionController {
         return ResponseEntity.ok(dto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> stats() {
         long total = transactionService.countTotalTransactions();
         long completed = transactionService.countCompletedTransactions();
+        long failed = transactionService.countFailedTransactions();
         Map<String, Object> stats = new java.util.HashMap<>();
         stats.put("total", total);
         stats.put("completed", completed);
-        stats.put("pending", total - completed);
+        stats.put("pending", total - completed - failed);
+        stats.put("failed", failed);
         return ResponseEntity.ok(stats);
     }
 

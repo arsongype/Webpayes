@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import type { ReactNode } from 'react';
 
 interface ModalProps {
@@ -8,7 +8,7 @@ interface ModalProps {
   children: ReactNode;
 }
 
-const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
+const Modal = memo(({ isOpen, onClose, title, children }: ModalProps) => {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -17,8 +17,11 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', handleKey);
-    closeButtonRef.current?.focus();
-    return () => document.removeEventListener('keydown', handleKey);
+    const timer = setTimeout(() => closeButtonRef.current?.focus(), 0);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      clearTimeout(timer);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -38,6 +41,8 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
       </div>
     </div>
   );
-};
+});
+
+Modal.displayName = 'Modal';
 
 export default Modal;

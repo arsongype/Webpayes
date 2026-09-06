@@ -11,6 +11,7 @@ export interface Transaction {
   riskScore?: number;
   createdAt: string;
   updatedAt: string;
+  type?: string;
 }
 
 export const TransactionStatus = {

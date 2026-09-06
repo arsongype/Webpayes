@@ -5,7 +5,7 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-slate-200 bg-white pb-6 dark:border-slate-800 dark:bg-slate-900 sm:pb-8 lg:pb-8">
+    <footer className="mt-auto border-t border-slate-200 bg-white pb-6 sm:pb-8 lg:pb-8 dark:border-white/10 dark:bg-slate-900">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
         <div className="mb-8 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
           {/* Brand */}
@@ -73,7 +73,7 @@ export const Footer = () => {
             <div className="flex justify-center gap-4 sm:justify-start">
               <a
                 href="mailto:contact@webpaysh.com"
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition-colors hover:bg-cyan-600 hover:text-white dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-cyan-600"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-500 transition-colors hover:bg-cyan-600 hover:text-white dark:bg-white/5 dark:text-slate-400 dark:hover:bg-cyan-500 dark:hover:text-white"
               >
                 <Mail size={20} />
               </a>
@@ -82,7 +82,7 @@ export const Footer = () => {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-slate-200 pt-6 dark:border-slate-800 sm:pt-8">
+        <div className="border-t border-slate-200 pt-6 sm:pt-8 dark:border-white/10">
           <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
             <p className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
               © {currentYear} WebPaysh. Fait avec <Heart size={16} className="text-red-500" /> pour les paiements numériques.

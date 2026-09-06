@@ -95,10 +95,10 @@ class FraudDetectionResponse(BaseModel):
 
 
 class RoutingRequest(BaseModel):
-    amount: float
-    currency: str
-    sender_country: str
-    receiver_country: str
+    amount: float = 0.0
+    currency: str = "USD"
+    sender_country: str = "MG"
+    receiver_country: str = "MG"
     urgency_seconds: int = 30
     preferred_channel: Optional[str] = None
 
@@ -424,8 +424,8 @@ async def evaluate_exemption(request: ExemptionRequest):
 
 import uuid
 
-def simulate_ocr_extraction(image_data: str, full_name: str) -> Dict[str, Any]:
-    """Simulate OCR extraction from an ID document image."""
+def simulate_ocr_extraction(image_data: str, full_name: str, date_of_birth: Optional[str] = None, nationality: Optional[str] = None) -> Dict[str, Any]:
+    """Simulate OCR extraction from an ID document image with identity analysis."""
     extracted = {}
     if full_name:
         parts = full_name.split()
@@ -435,6 +435,10 @@ def simulate_ocr_extraction(image_data: str, full_name: str) -> Dict[str, Any]:
     extracted["document_number"] = f"ID-{uuid.uuid4().hex[:8].upper()}"
     extracted["issue_date"] = "2023-01-15"
     extracted["expiry_date"] = "2033-01-15"
+    if date_of_birth:
+        extracted["date_of_birth"] = date_of_birth
+    if nationality:
+        extracted["nationality"] = nationality
 
     confidence = 0.95
     return extracted, confidence
@@ -442,13 +446,19 @@ def simulate_ocr_extraction(image_data: str, full_name: str) -> Dict[str, Any]:
 
 @app.post("/api/kyc/verify", response_model=KycResponse)
 async def verify_kyc(request: KycRequest):
-    """KYC verification with OCR extraction from ID document."""
+    """KYC verification with OCR extraction and identity analysis from ID document."""
     verification_id = str(uuid.uuid4())
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     extracted_data, confidence = simulate_ocr_extraction(
-        request.id_document_image, request.full_name
+        request.id_document_image,
+        request.full_name,
+        request.date_of_birth,
+        request.nationality,
     )
+
+    # Simulate analysis processing time
+    time.sleep(1)
 
     # Simulate verification checks
     name_match = (
@@ -456,10 +466,24 @@ async def verify_kyc(request: KycRequest):
         in request.full_name.lower()
     )
 
+    # Additional identity checks
+    dob_valid = True
+    nationality_match = True
+    if request.date_of_birth:
+        try:
+            from datetime import datetime
+            dob = datetime.strptime(request.date_of_birth, "%Y-%m-%d")
+            if dob > datetime.now():
+                dob_valid = False
+                confidence *= 0.7
+        except Exception:
+            dob_valid = False
+            confidence *= 0.8
+
     if not name_match:
         confidence *= 0.7
 
-    status = "VERIFIED" if confidence > 0.85 and name_match else "REJECTED"
+    status = "VERIFIED" if confidence > 0.85 and name_match and dob_valid else "REJECTED"
 
     # Reject if image is empty/too small
     if not request.id_document_image or len(request.id_document_image) < 50:
@@ -486,6 +510,18 @@ async def verify_kyc(request: KycRequest):
             updated_at=now,
         )
 
+    if not dob_valid:
+        return KycResponse(
+            verification_id=verification_id,
+            user_id=request.user_id,
+            status="REJECTED",
+            extracted_data=extracted_data,
+            confidence_score=confidence,
+            rejection_reason="Date of birth is invalid or in the future",
+            created_at=now,
+            updated_at=now,
+        )
+
     return KycResponse(
         verification_id=verification_id,
         user_id=request.user_id,
@@ -505,7 +541,10 @@ async def verify_account_kyc(request: KycRequest):
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     extracted_data, confidence = simulate_ocr_extraction(
-        request.id_document_image, request.full_name
+        request.id_document_image,
+        request.full_name,
+        request.date_of_birth,
+        request.nationality,
     )
     extracted_data["account_holder_name"] = request.full_name
     extracted_data["verification_type"] = "ACCOUNT_OWNERSHIP"

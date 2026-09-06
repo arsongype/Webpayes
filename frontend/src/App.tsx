@@ -18,10 +18,10 @@ function AppContent() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
       <Navbar />
       
-      <div className="flex flex-1 pt-16">
+      <div className="relative flex flex-1 pt-16">
         {/* Desktop Sidebar */}
         {isAuthenticated && <Sidebar />}
         

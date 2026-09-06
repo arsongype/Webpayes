@@ -25,7 +25,7 @@ const Sidebar = () => {
 
   return (
     <div className="group fixed left-0 top-16 bottom-0 z-40 hidden lg:block w-16 hover:w-64 transition-all duration-300 ease-in-out">
-      <nav className="flex flex-col gap-2 p-3 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-lg h-full overflow-hidden">
+      <nav className="flex flex-col gap-2 p-3 bg-white border-r border-slate-200 shadow-lg h-full overflow-hidden dark:bg-slate-900 dark:border-white/10 dark:shadow-none">
         {isAdmin ? adminMenuItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -36,8 +36,8 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center gap-3 p-3 rounded-xl transition-colors relative ${
                 active
-                  ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-amber-600'
+                  ? 'bg-cyan-500/20 text-cyan-700 border border-cyan-500/30 dark:text-cyan-300'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-cyan-600 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-cyan-400'
               }`}
             >
               <Icon className="w-5 h-5 min-w-5" />
@@ -56,8 +56,8 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center gap-3 p-3 rounded-xl transition-colors relative ${
                 active
-                  ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30'
-                  : 'text-slate-600 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 hover:text-cyan-600'
+                  ? 'bg-cyan-500/20 text-cyan-700 border border-cyan-500/30 dark:text-cyan-300'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-cyan-600 dark:text-slate-300 dark:hover:bg-white/5 dark:hover:text-cyan-400'
               }`}
             >
               <Icon className="w-5 h-5 min-w-5" />
@@ -71,7 +71,7 @@ const Sidebar = () => {
         <div className="mt-auto">
           <button
             onClick={logout}
-            className="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors w-full"
+            className="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors w-full dark:text-rose-400 dark:hover:bg-rose-500/10"
           >
             <LogOut className="w-5 h-5 min-w-5" />
             <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
