@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -52,6 +52,11 @@ const MerchantDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [recentTx, setRecentTx] = useState<Transaction[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const toastRef = useRef(toast);
+
+  useEffect(() => {
+    toastRef.current = toast;
+  }, [toast]);
 
   const loadAnalytics = useCallback(async () => {
     setLoading(true);
@@ -75,13 +80,13 @@ const MerchantDashboard = () => {
         return;
       }
       const message = axiosError?.response?.data?.message ?? 'Impossible de charger les analyses.';
-      toast.addToast({ type: 'error', title: 'Erreur', message, duration: 6000 });
+      toastRef.current.addToast({ type: 'error', title: 'Erreur', message, duration: 6000 });
       setError(message);
       setAnalytics(null);
     } finally {
       setLoading(false);
     }
-  }, [days, toast]);
+  }, [days]);
 
   const loadRecent = useCallback(async () => {
     try {
