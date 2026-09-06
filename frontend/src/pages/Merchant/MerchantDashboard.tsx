@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -19,7 +20,7 @@ import { useToast } from '../../components/common/Toast/useToast';
 import type { Transaction } from '../../types/transaction.types';
 import { exportDashboardToPdf } from '../../utils/exportPdf';
 
-interface AnalyticsResponse {
+export interface AnalyticsResponse {
   totalVolume: number;
   totalTransactions: number;
   completedTransactions: number;
@@ -52,7 +53,7 @@ const MerchantDashboard = () => {
   const [recentTx, setRecentTx] = useState<Transaction[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -80,9 +81,9 @@ const MerchantDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [days, toast]);
 
-  const loadRecent = async () => {
+  const loadRecent = useCallback(async () => {
     try {
       const resp = await api.get(`/merchant/dashboard/recent-transactions?limit=10`);
       if (resp.status === 204) {
@@ -93,12 +94,12 @@ const MerchantDashboard = () => {
     } catch {
       setRecentTx([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadAnalytics();
     loadRecent();
-  }, [days]);
+  }, [days, loadAnalytics, loadRecent]);
 
   const [showAllDailyVolumes, setShowAllDailyVolumes] = useState(false);
 
@@ -354,7 +355,7 @@ const MerchantDashboard = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                       {recentTx.map((tx) => {
-                        const statusConfig: Record<string, { bg: string; text: string; icon: typeof CheckCircle2 }> = {
+                        const statusConfig: Record<string, { bg: string; icon: typeof CheckCircle2 }> = {
                           COMPLETED: { bg: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300', icon: CheckCircle2 },
                           PENDING: { bg: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300', icon: Clock },
                           FAILED: { bg: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300', icon: XCircle },

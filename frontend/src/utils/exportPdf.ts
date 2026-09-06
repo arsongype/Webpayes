@@ -27,7 +27,7 @@ export const exportDashboardToPdf = (data: AnalyticsResponse, days: number) => {
   doc.text('Volume par jour', 14, y);
   y += 6;
   doc.setFontSize(11);
-  data.dailyVolumes.forEach((d) => {
+  data.dailyVolumes.forEach((d: { date: string; volume: number }) => {
     if (y > 270) {
       doc.addPage();
       y = 20;
@@ -45,7 +45,7 @@ export const exportDashboardToPdf = (data: AnalyticsResponse, days: number) => {
   doc.text('Répartition par méthode', 14, y);
   y += 6;
   doc.setFontSize(11);
-  data.methodBreakdown.forEach((m) => {
+  data.methodBreakdown.forEach((m: { method: string; count: number }) => {
     if (y > 270) {
       doc.addPage();
       y = 20;

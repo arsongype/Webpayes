@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import refundService, { type DisputeDTO } from '../../services/refundService';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 const AdminDisputes = () => {
   const [disputes, setDisputes] = useState<DisputeDTO[]>([]);

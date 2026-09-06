@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, Store, Settings, LogOut, Menu, X, Shield, Users, FileText } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Store, Settings, LogOut, Menu, X, Shield } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 export const NavbarMobile = () => {

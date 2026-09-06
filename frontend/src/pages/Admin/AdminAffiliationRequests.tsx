@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import merchantService, { type MerchantAffiliationRequestDTO, type MerchantAffiliationRequestPageDTO } from '../../services/merchantService';
-import { Eye, Shield, FileText, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
+import { Eye, Shield, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AdminAffiliationRequests = () => {
   const [requests, setRequests] = useState<MerchantAffiliationRequestDTO[]>([]);
