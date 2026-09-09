@@ -25,6 +25,28 @@ jobs:
       - name: Build backend
         run: mvn -B -DskipTests package
 
+      - name: Run backend tests
+        run: mvn -B test
+
+  backend-integration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Run backend integration tests
+        run: mvn -B test -Pintegration-tests
+
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -46,6 +68,9 @@ jobs:
 
       - name: Lint frontend
         run: npm run lint
+
+      - name: Run frontend unit tests
+        run: npm run test:unit
 
       - name: Build frontend
         run: npm run build

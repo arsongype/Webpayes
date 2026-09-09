@@ -41,10 +41,10 @@ public class TwoFactorController {
             throw new BusinessException("Code incorrect", HttpStatus.BAD_REQUEST);
         }
         User user = currentUserService.getCurrentUser();
-        List<String> recoveryCodes = twoFactorService.generateRecoveryCodes(10);
+        List<String> recoveryCodes = twoFactorService.generateRecoveryCodes(8);
         user.setTwoFactorEnabled(true);
         user.setTwoFactorSecret(secret);
-        user.setTwoFactorRecoveryCodes(String.join(",", recoveryCodes));
+        user.setTwoFactorRecoveryCodes(twoFactorService.encryptRecoveryCodes(recoveryCodes, user.getEmail()));
         userRepository.save(user);
         return ResponseEntity.ok().build();
     }
@@ -57,7 +57,7 @@ public class TwoFactorController {
             valid = twoFactorService.verifyCode(user.getTwoFactorSecret(), code);
         }
         if (!valid && recoveryCode != null && !recoveryCode.isBlank()) {
-            valid = twoFactorService.verifyRecoveryCode(user.getTwoFactorRecoveryCodes(), recoveryCode);
+            valid = twoFactorService.verifyRecoveryCode(user.getTwoFactorRecoveryCodes(), recoveryCode, user.getEmail());
         }
         if (!valid) {
             throw new BusinessException("Code incorrect", HttpStatus.BAD_REQUEST);
@@ -81,14 +81,15 @@ public class TwoFactorController {
         if (codes == null || codes.isBlank()) {
             return ResponseEntity.ok(new TwoFactorRecoveryResponse(List.of()));
         }
-        return ResponseEntity.ok(new TwoFactorRecoveryResponse(List.of(codes.split(","))));
+        List<String> decryptedCodes = twoFactorService.decryptRecoveryCodes(codes, user.getEmail());
+        return ResponseEntity.ok(new TwoFactorRecoveryResponse(decryptedCodes));
     }
 
     @PostMapping("/recovery-codes/regenerate")
     public ResponseEntity<TwoFactorRecoveryResponse> regenerateRecoveryCodes() {
         User user = currentUserService.getCurrentUser();
-        List<String> recoveryCodes = twoFactorService.generateRecoveryCodes(10);
-        user.setTwoFactorRecoveryCodes(String.join(",", recoveryCodes));
+        List<String> recoveryCodes = twoFactorService.generateRecoveryCodes(8);
+        user.setTwoFactorRecoveryCodes(twoFactorService.encryptRecoveryCodes(recoveryCodes, user.getEmail()));
         userRepository.save(user);
         return ResponseEntity.ok(new TwoFactorRecoveryResponse(recoveryCodes));
     }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Heart, Mail } from 'lucide-react';
+import newLogo from '../../assets/new-logo-isalosys-610x278.png';
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -10,9 +11,7 @@ export const Footer = () => {
         <div className="mb-8 grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
           {/* Brand */}
           <div className="text-center sm:text-left">
-            <h3 className="mb-4 bg-linear-to-r from-cyan-500 to-blue-600 bg-clip-text text-2xl font-bold text-transparent">
-              WebPaysh
-            </h3>
+            <img src={newLogo} alt="WebPaysh" className="mb-4 h-10 w-auto object-contain" />
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Plateforme de paiement sécurisée avec authentification JWT et gestion des transferts.
             </p>
@@ -85,7 +84,7 @@ export const Footer = () => {
         <div className="border-t border-slate-200 pt-6 sm:pt-8 dark:border-white/10">
           <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
             <p className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-              © {currentYear} WebPaysh. Fait avec <Heart size={16} className="text-red-500" /> pour les paiements numériques.
+              © {currentYear}. Fait avec <Heart size={16} className="text-red-500" /> pour les paiements numériques.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
               <Link to="/terms" className="text-sm text-slate-500 transition-colors hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400">

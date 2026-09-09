@@ -2,17 +2,16 @@ package com.paymentplatform.transaction;
 
 import com.paymentplatform.account.entity.Account;
 import com.paymentplatform.account.repository.AccountRepository;
-import com.paymentplatform.ledger.service.LedgerService;
 import com.paymentplatform.security.CurrentUserService;
 import com.paymentplatform.transaction.dto.TransferRequestDTO;
 import com.paymentplatform.transaction.dto.TransferResponseDTO;
 import com.paymentplatform.transaction.entity.Transaction;
 import com.paymentplatform.transaction.repository.TransactionRepository;
 import com.paymentplatform.transaction.service.TransactionService;
+import com.paymentplatform.user.entity.User;
 import com.paymentplatform.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -25,36 +24,22 @@ class TransactionServiceTest {
 
     private TransactionRepository transactionRepository;
     private AccountRepository accountRepository;
-    private LedgerService ledgerService;
     private CurrentUserService currentUserService;
     private WalletService walletService;
-    private com.paymentplatform.aiclient.FraudDetectionClient fraudClient;
-    private com.paymentplatform.aiclient.RiskScoringClient riskClient;
-    private com.paymentplatform.notification.service.NotificationService notificationService;
     private TransactionService transactionService;
 
     @BeforeEach
     void setUp() {
         transactionRepository = mock(TransactionRepository.class);
         accountRepository = mock(AccountRepository.class);
-        ledgerService = mock(LedgerService.class);
         currentUserService = mock(CurrentUserService.class);
         walletService = mock(WalletService.class);
-        fraudClient = mock(com.paymentplatform.aiclient.FraudDetectionClient.class);
-        riskClient = mock(com.paymentplatform.aiclient.RiskScoringClient.class);
-        notificationService = mock(com.paymentplatform.notification.service.NotificationService.class);
 
         transactionService = new TransactionService(
                 transactionRepository,
                 accountRepository,
-                ledgerService,
-                currentUserService,
                 walletService,
-                mock(com.paymentplatform.auth.twofactor.TwoFactorService.class),
-                fraudClient,
-                riskClient,
-                mock(com.paymentplatform.operator.OperatorClientRegistry.class),
-                notificationService
+                currentUserService
         );
     }
 
@@ -62,29 +47,31 @@ class TransactionServiceTest {
     void transfer_success_calls_services_and_returns_response() {
         UUID senderId = UUID.randomUUID();
         UUID receiverId = UUID.randomUUID();
-        UUID currentUser = UUID.randomUUID();
+        UUID currentUserId = UUID.randomUUID();
 
-        Account sender = new Account();
-        sender.setId(senderId);
-        sender.setAccountNumber("SENDER-123");
-        sender.setBalance(new BigDecimal("100.00"));
-        sender.setCurrency("MGA");
-        sender.setUser(com.paymentplatform.user.entity.User.builder()
-            .id(currentUser)
+        User currentUser = User.builder()
+            .id(currentUserId)
             .firstName("u")
             .lastName("u")
             .email("u@example.com")
             .passwordHash("pass")
             .role(com.paymentplatform.common.constants.Role.USER)
             .enabled(true)
-            .build());
+            .build();
+
+        Account sender = new Account();
+        sender.setId(senderId);
+        sender.setAccountNumber("SENDER-123");
+        sender.setBalance(new BigDecimal("100.00"));
+        sender.setCurrency("MGA");
+        sender.setUser(currentUser);
 
         Account receiver = new Account();
         receiver.setId(receiverId);
         receiver.setAccountNumber("RCV-123");
         receiver.setBalance(new BigDecimal("10.00"));
         receiver.setCurrency("MGA");
-        receiver.setUser(com.paymentplatform.user.entity.User.builder()
+        receiver.setUser(User.builder()
             .id(UUID.randomUUID())
             .firstName("r")
             .lastName("r")
@@ -94,10 +81,11 @@ class TransactionServiceTest {
             .enabled(true)
             .build());
 
-        when(currentUserService.getCurrentUserId()).thenReturn(currentUser);
+        when(currentUserService.getCurrentUserId()).thenReturn(currentUserId);
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(currentUserService.isCurrentUserAdmin()).thenReturn(false);
-        when(accountRepository.findById(senderId)).thenReturn(Optional.of(sender));
-        when(accountRepository.findById(receiverId)).thenReturn(Optional.of(receiver));
+        when(accountRepository.findByIdForUpdate(senderId)).thenReturn(Optional.of(sender));
+        when(accountRepository.findByIdForUpdate(receiverId)).thenReturn(Optional.of(receiver));
 
         TransferRequestDTO req = new TransferRequestDTO(senderId, receiverId, new BigDecimal("25.00"), "Payment");
 
@@ -106,14 +94,11 @@ class TransactionServiceTest {
             t.setId(UUID.randomUUID());
             return t;
         });
-        when(fraudClient.analyze(any())).thenReturn(com.paymentplatform.aiclient.FraudDetectionResponse.builder().fraudScore(0.0).build());
-        when(riskClient.score(any())).thenReturn(com.paymentplatform.aiclient.RiskScoringResponse.builder().riskScore(0.0).build());
 
         TransferResponseDTO resp = transactionService.transfer(req);
 
         assertNotNull(resp);
         assertEquals(new BigDecimal("25.00"), resp.getAmount());
-        verify(ledgerService, times(1)).saveEntries(any());
         verify(walletService, times(1)).withdraw(any(), anyBoolean(), any(), any(), any());
         verify(walletService, times(1)).deposit(any(), anyBoolean(), any(), any(), any());
     }

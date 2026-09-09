@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -15,19 +15,34 @@ import {
   ArrowUpRight,
   Download,
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 import api from '../../services/api';
 import { useToast } from '../../components/common/Toast/useToast';
+import { useBalanceStream } from '../../hooks/useBalanceStream';
 import type { Transaction } from '../../types/transaction.types';
 import { exportDashboardToPdf } from '../../utils/exportPdf';
+import { formatDate, formatDateTime } from '../../utils/dateFormat';
 
 export interface AnalyticsResponse {
   totalVolume: number;
+  currentBalance: number;
   totalTransactions: number;
   completedTransactions: number;
   pendingTransactions: number;
   failedTransactions: number;
   successRate: number;
   dailyVolumes: Array<{ date: string; volume: number }>;
+  balanceEvolution: Array<{ date: string; balance: number }>;
   methodBreakdown: Array<{ method: string; count: number }>;
 }
 
@@ -53,12 +68,14 @@ const MerchantDashboard = () => {
   const [recentTx, setRecentTx] = useState<Transaction[]>([]);
   const [error, setError] = useState<string | null>(null);
   const toastRef = useRef(toast);
+  const loadAnalyticsRef = useRef<() => Promise<void>>(async () => {});
+  const loadRecentRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     toastRef.current = toast;
   }, [toast]);
 
-  const loadAnalytics = useCallback(async () => {
+  const loadAnalytics = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -86,9 +103,9 @@ const MerchantDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  };
 
-  const loadRecent = useCallback(async () => {
+  const loadRecent = async () => {
     try {
       const resp = await api.get(`/merchant/dashboard/recent-transactions?limit=10`);
       if (resp.status === 204) {
@@ -99,17 +116,20 @@ const MerchantDashboard = () => {
     } catch {
       setRecentTx([]);
     }
-  }, []);
+  };
+
+  loadAnalyticsRef.current = loadAnalytics;
+  loadRecentRef.current = loadRecent;
+
+  useBalanceStream(() => {
+    loadAnalyticsRef.current();
+    loadRecentRef.current();
+  });
 
   useEffect(() => {
     loadAnalytics();
     loadRecent();
-  }, [days, loadAnalytics, loadRecent]);
-
-  const [showAllDailyVolumes, setShowAllDailyVolumes] = useState(false);
-
-  const maxVolume = analytics ? Math.max(...analytics.dailyVolumes.map((d) => d.volume), 1) : 1;
-  const totalMethods = analytics?.methodBreakdown.reduce((sum, m) => sum + m.count, 0) ?? 0;
+  }, [days]);
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 dark:bg-slate-950 dark:text-slate-50 sm:px-6 lg:px-8">
@@ -198,7 +218,7 @@ const MerchantDashboard = () => {
           <>
             {/* Stats Grid */}
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard label="Volume total" value={`${analytics.totalVolume.toFixed(2)} €`} accent="cyan" icon={DollarSign} />
+              <StatCard label="Solde disponible" value={`${analytics.currentBalance.toFixed(2)} MGA`} accent="cyan" icon={DollarSign} />
               <StatCard label="Transactions" value={analytics.totalTransactions} accent="blue" icon={Activity} />
               <StatCard
                 label="Taux de réussite"
@@ -243,6 +263,24 @@ const MerchantDashboard = () => {
 
             {/* Charts row */}
             <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900 lg:col-span-1">
+                <div className="border-b border-slate-200 px-5 py-4 dark:border-white/5">
+                  <h2 className="text-sm font-semibold">Évolution du solde</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Solde après chaque journée</p>
+                </div>
+                <div className="p-5">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={analytics.balanceEvolution} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
+                      <XAxis dataKey="date" stroke="#94a3b8" tickLine={false} tickFormatter={(value: string) => formatDate(value, { day: '2-digit', month: 'short' })} />
+                      <YAxis stroke="#94a3b8" tickLine={false} tickFormatter={(value: number) => `${Number(value).toFixed(0)}`} />
+                      <Tooltip formatter={(value: unknown) => [`${Number(value || 0).toFixed(2)} MGA`, 'Solde']} labelFormatter={(label: unknown) => formatDate(String(label || ''))} />
+                      <Line type="monotone" dataKey="balance" stroke="#f59e0b" strokeWidth={3} dot={{ r: 3 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
               {/* Volume par jour */}
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900 lg:col-span-2">
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-white/5">
@@ -256,35 +294,30 @@ const MerchantDashboard = () => {
                   {analytics.dailyVolumes.length === 0 ? (
                     <p className="py-8 text-center text-sm text-slate-500">Aucune donnée disponible</p>
                   ) : (
-                    <>
-                      <div className={`space-y-2.5 ${!showAllDailyVolumes ? 'max-h-[320px] overflow-hidden' : ''}`}>
-                        {analytics.dailyVolumes.slice(0, showAllDailyVolumes ? undefined : 10).map((d) => (
-                          <div key={d.date} className="flex items-center gap-3 text-sm">
-                            <span className="w-16 flex-shrink-0 text-xs text-slate-500 dark:text-slate-400">
-                              {new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                            </span>
-                            <div className="h-5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/60">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-cyan-600 transition-all"
-                                style={{ width: `${Math.max(2, (d.volume / maxVolume) * 100)}%` }}
-                              />
-                            </div>
-                            <span className="w-20 flex-shrink-0 text-right text-sm font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-                              {d.volume.toFixed(0)} €
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {analytics.dailyVolumes.length > 10 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowAllDailyVolumes((v) => !v)}
-                          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-cyan-600 transition hover:text-cyan-700 dark:text-cyan-400"
-                        >
-                          {showAllDailyVolumes ? 'Réduire' : `Voir les ${analytics.dailyVolumes.length - 10} autres jours`}
-                        </button>
-                      )}
-                    </>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={analytics.dailyVolumes} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="#94a3b8"
+                          style={{ fontSize: '11px' }}
+                          tickLine={false}
+                          tickFormatter={(value: string) => formatDate(value, { day: '2-digit', month: 'short' })}
+                        />
+                        <YAxis
+                          stroke="#94a3b8"
+                          style={{ fontSize: '11px' }}
+                          tickLine={false}
+                          tickFormatter={(value: number) => `${Number(value).toFixed(0)} €`}
+                        />
+                        <Tooltip
+                          cursor={{ stroke: '#06b6d4', strokeWidth: 1, strokeDasharray: '3 3' }}
+                          formatter={(value: unknown) => [`${Number(value || 0).toFixed(2)} €`, 'Volume']}
+                          labelFormatter={(label: unknown) => formatDate(String(label || ''))}
+                        />
+                        <Bar dataKey="volume" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
                   )}
                 </div>
               </div>
@@ -304,7 +337,7 @@ const MerchantDashboard = () => {
                   ) : (
                     <div className="space-y-3">
                       {analytics.methodBreakdown.map((m) => {
-                        const total = totalMethods || 1;
+                        const total = analytics.methodBreakdown.reduce((sum, method) => sum + method.count, 0) || 1;
                         const pct = (m.count / total) * 100;
                         const color = methodColors[m.method] || methodColors.unknown;
                         return (
@@ -370,12 +403,7 @@ const MerchantDashboard = () => {
                         return (
                           <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                             <td className="whitespace-nowrap px-5 py-3 text-slate-700 dark:text-slate-200">
-                              {new Date(tx.createdAt).toLocaleString('fr-FR', {
-                                day: '2-digit',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                              {formatDateTime(tx.createdAt, { hour: '2-digit', minute: '2-digit' })}
                             </td>
                             <td className="whitespace-nowrap px-5 py-3 font-semibold tabular-nums text-slate-900 dark:text-white">
                               {tx.amount} {tx.currency}

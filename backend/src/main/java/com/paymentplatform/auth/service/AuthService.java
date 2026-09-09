@@ -68,7 +68,7 @@ public class AuthService {
                 .email(request.email().toLowerCase())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .role(role)
-                .enabled(true)
+                .enabled(false)
                 .phoneNumber(request.phoneNumber())
                 .cin(request.cin())
                 .dateOfBirth(dob)

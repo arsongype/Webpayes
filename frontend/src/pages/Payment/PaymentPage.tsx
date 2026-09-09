@@ -122,8 +122,9 @@ const PaymentPage = () => {
       });
       setPaymentResult(result);
       setMessage({ type: result.success ? 'success' : 'error', text: result.message });
-    } catch {
-      setMessage({ type: 'error', text: 'Échec du paiement.' });
+    } catch (error) {
+      const text = error instanceof Error ? error.message : 'Échec du paiement.';
+      setMessage({ type: 'error', text });
     } finally {
       setLoading(false);
     }

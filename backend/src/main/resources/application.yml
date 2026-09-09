@@ -129,5 +129,5 @@ payment:
       simulate-success: ${MOCK_PAYMENT_SUCCESS:true}
 
   fraud:
-    block-threshold: ${PAYMENT_FRAUD_BLOCK_THRESHOLD:0.8}
-    challenge-threshold: ${PAYMENT_FRAUD_CHALLENGE_THRESHOLD:0.5}
+    block-threshold: ${PAYMENT_FRAUD_BLOCK_THRESHOLD:0.85}
+    challenge-threshold: ${PAYMENT_FRAUD_CHALLENGE_THRESHOLD:0.40}

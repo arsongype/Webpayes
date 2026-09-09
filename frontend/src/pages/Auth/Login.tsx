@@ -5,7 +5,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import axios from 'axios';
-import { Shield, CheckCircle2, Loader2, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Loader2, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import newLogo from '../../assets/new-logo-isalosys-610x278.png';
 import type { LoginPayload } from '../../services/authService';
 
 const schema = z.object({
@@ -24,15 +25,7 @@ const schema = z.object({
 type LoginForm = z.infer<typeof schema>;
 
 const inputClass =
-  'w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-500/50 focus:bg-white/10 focus:ring-2 focus:ring-cyan-500/20 dark:placeholder:text-slate-500 sm:py-3';
-
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  'w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 dark:border-white/10 dark:bg-slate-900/60 dark:text-white dark:placeholder:text-slate-500 sm:py-3';
 
 const Login = () => {
   const { login, loginWithGoogle } = useAuth();
@@ -84,181 +77,185 @@ const Login = () => {
     }
   };
 
-  const today = new Date();
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
-      <div className="w-full max-w-md px-6 py-10">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25">
-            <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 7.5C3 5.567 4.567 4 6.5 4H17.5C19.433 4 21 5.567 21 7.5V11H3V7.5Z" fill="currentColor" opacity="0.9" />
-              <path d="M3 13H21V16.5C21 18.433 19.433 20 17.5 20H6.5C4.567 20 3 18.433 3 16.5V13Z" fill="currentColor" opacity="0.5" />
-              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-            </svg>
-          </div>
-          <h1 className="mt-4 text-xl font-bold tracking-tight text-slate-900 dark:text-white">WebPaysh</h1>
-          <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-700 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-300">
-            Paiement nouvelle génération
-          </span>
+    <div className="flex min-h-screen">
+      {/* Left side - Branding */}
+      <div className="relative hidden w-1/2 bg-gradient-to-br from-cyan-500 to-blue-600 lg:flex">
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-12">
+          <img src={newLogo} alt="WebPaysh" className="h-40 w-auto object-contain" />
         </div>
+        {/* Decorative circles */}
+        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+      </div>
 
-        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900 dark:shadow-none">
-          <div className="border-b border-slate-200 px-6 py-5 dark:border-white/10">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Connexion</h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Entrez vos identifiants pour accéder à votre compte</p>
-              </div>
-              <span className="text-right text-[11px] text-slate-400 dark:text-slate-500">{formatDate(today)}</span>
-            </div>
+      {/* Right side - Form */}
+      <div className="flex w-full items-center justify-center bg-white px-6 py-12 lg:w-1/2 dark:bg-slate-950 dark:text-slate-50">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="mb-8 flex flex-col items-center text-center lg:hidden">
+            <img src={newLogo} alt="WebPaysh" className="h-16 w-auto object-contain" />
           </div>
-          <div className="px-6 py-5">
-            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-              {requiresTwoFactor && (
-                <div className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-3 text-sm text-cyan-800 dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200">
-                  <div className="flex items-center gap-2">
-                    <Shield size={16} className="flex-shrink-0" />
-                    <p className="font-medium">Authentification à deux facteurs obligatoire</p>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                    Après votre mot de passe, vous devrez saisir un code à 6 chiffres de votre application d'authentification.
-                  </p>
-                </div>
-              )}
 
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="email">
-                  Email
+          <div className="hidden lg:mb-8 lg:block">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Bienvenue</h2>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">Connectez-vous à votre espace de gestion</p>
+          </div>
+
+          <div className="lg:hidden mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Connexion</h2>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">Entrez vos identifiants pour accéder à votre compte</p>
+          </div>
+
+          <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+            {requiresTwoFactor && (
+              <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={18} className="flex-shrink-0" />
+                  <p className="font-medium">Identifiants vérifiés</p>
+                </div>
+                <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  Ouvrez votre application d'authentification et saisissez le code à 6 chiffres.
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="email">
+                Adresse Email
+              </label>
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  {...register('email')}
+                  className={inputClass}
+                  placeholder="votre@email.com"
+                />
+              </div>
+              {errors.email && <p className="mt-1.5 text-sm text-rose-600">{errors.email.message}</p>}
+            </div>
+
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="password">
+                  Mot de passe
                 </label>
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                  <input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    {...register('email')}
-                    className={inputClass}
-                    placeholder="vous@exemple.com"
-                  />
-                </div>
-                {errors.email && <p className="mt-1.5 text-sm text-rose-600">{errors.email.message}</p>}
+                <Link to="/forgot-password" className="text-xs font-medium text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">
+                  Mot de passe oublié ?
+                </Link>
               </div>
-
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="password">
-                    Mot de passe
-                  </label>
-                  <Link to="/forgot-password" className="text-xs font-medium text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">
-                    Oublié ?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    {...register('password')}
-                    className={inputClass}
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="mt-1.5 text-sm text-rose-600">{errors.password.message}</p>}
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  {...register('password')}
+                  className={inputClass}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-
-              {requiresTwoFactor && (
-                <div>
-                  <div className="mb-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={16} className="flex-shrink-0" />
-                      <p className="font-medium">Identifiants vérifiés</p>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-                      Ouvrez votre application d'authentification et saisissez le code à 6 chiffres.
-                    </p>
-                  </div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="twoFactorCode">
-                    Code de vérification (2FA)
-                  </label>
-                  <input
-                    id="twoFactorCode"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    maxLength={6}
-                    pattern="[0-9]{6}"
-                    {...register('twoFactorCode', { required: true, pattern: /^\d{6}$/ })}
-                    className={inputClass.replace('pl-10', 'px-4') + ' text-center font-mono text-2xl tracking-[0.5em]'}
-                    placeholder="000000"
-                    autoFocus
-                  />
-                  {errors.twoFactorCode && (
-                    <p className="mt-1.5 text-sm text-rose-600">
-                      Code à 6 chiffres requis
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {submitError && (
-                <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200" role="alert">
-                  {submitError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3 font-semibold text-white shadow-md transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    {requiresTwoFactor ? 'Vérification du code...' : 'Connexion...'}
-                  </span>
-                ) : (
-                  <>
-                    {requiresTwoFactor ? 'Vérifier le code 2FA' : 'Se connecter'}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="mt-5 w-full">
-              <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-[0.24em] text-slate-400 dark:text-slate-500">
-                <span className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-                <span>ou</span>
-                <span className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-              </div>
-
-              <button
-                onClick={loginWithGoogle}
-                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-900 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 sm:py-3 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
-                type="button"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.03 2.53-2.18 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                Continuer avec Google
-              </button>
+              {errors.password && <p className="mt-1.5 text-sm text-rose-600">{errors.password.message}</p>}
             </div>
 
-            <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-              Pas encore de compte ?{' '}
-              <Link to="/register" className="font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">
-                Créer un compte
-              </Link>
-            </p>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500 dark:border-white/10"
+                />
+                <span className="text-sm text-slate-700 dark:text-slate-300">Se souvenir de moi</span>
+              </label>
+            </div>
+
+            {requiresTwoFactor && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="twoFactorCode">
+                  Code de vérification (2FA)
+                </label>
+                <input
+                  id="twoFactorCode"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  pattern="[0-9]{6}"
+                  {...register('twoFactorCode', { required: true, pattern: /^\d{6}$/ })}
+                  className={inputClass.replace('pl-10', 'px-4') + ' text-center font-mono text-2xl tracking-[0.5em]'}
+                  placeholder="000000"
+                  autoFocus
+                />
+                {errors.twoFactorCode && (
+                  <p className="mt-1.5 text-sm text-rose-600">
+                    Code à 6 chiffres requis
+                  </p>
+                )}
+              </div>
+            )}
+
+            {submitError && (
+              <div className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200" role="alert">
+                {submitError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-700 px-4 py-3 font-semibold text-white shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  {requiresTwoFactor ? 'Vérification du code...' : 'Connexion...'}
+                </span>
+              ) : (
+                <>
+                  Se connecter
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-slate-500 dark:bg-slate-950 dark:text-slate-400">ou</span>
+              </div>
+            </div>
+
+            <button
+              onClick={loginWithGoogle}
+              className="mt-4 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-medium text-slate-900 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 sm:py-3 dark:border-white/10 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              type="button"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.03 2.53-2.18 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Continuer avec Google
+            </button>
           </div>
+
+          <p className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+            Pas encore de compte ?{' '}
+            <Link to="/register" className="font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300">
+              Créer un compte
+            </Link>
+          </p>
         </div>
       </div>
     </div>

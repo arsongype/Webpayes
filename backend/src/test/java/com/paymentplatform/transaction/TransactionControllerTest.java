@@ -45,6 +45,15 @@ class TransactionControllerTest {
     @MockBean
     private com.paymentplatform.security.UserDetailsServiceImpl userDetailsServiceImpl;
 
+    @MockBean
+    private com.paymentplatform.security.jwt.JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockBean
+    private com.paymentplatform.agent.service.AiAgentService aiAgentService;
+
+    @MockBean
+    private com.paymentplatform.idempotency.IdempotencyService idempotencyService;
+
     @Test
     void transfer_endpoint_returns_ok() throws Exception {
         UUID s = UUID.randomUUID();

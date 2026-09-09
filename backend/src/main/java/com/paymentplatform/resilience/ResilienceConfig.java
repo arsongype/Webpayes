@@ -18,10 +18,10 @@ public class ResilienceConfig {
                 .failureRateThreshold(50)
                 .slowCallRateThreshold(50)
                 .slowCallDurationThreshold(Duration.ofSeconds(5))
-                .waitDurationInOpenState(Duration.ofSeconds(10))
+                .waitDurationInOpenState(Duration.ofSeconds(30))
                 .permittedNumberOfCallsInHalfOpenState(3)
-                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-                .slidingWindowSize(10)
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+                .slidingWindowSize(20)
                 .recordExceptions(
                         java.net.ConnectException.class,
                         java.net.SocketTimeoutException.class,

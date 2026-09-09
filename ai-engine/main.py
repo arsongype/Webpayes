@@ -218,9 +218,9 @@ def predict_fraud_score(amount: float, metadata: Optional[Dict[str, Any]]) -> fl
 
 
 def classify_risk(score: float) -> str:
-    if score >= 0.8:
+    if score >= 0.85:
         return "HIGH"
-    elif score >= 0.5:
+    elif score >= 0.40:
         return "MEDIUM"
     return "LOW"
 
@@ -241,12 +241,12 @@ async def detect_fraud(request: FraudDetectionRequest):
 
     score = predict_fraud_score(request.amount, request.metadata)
     risk_level = classify_risk(score)
-    is_fraud = score >= 0.8
+    is_fraud = score >= 0.85
 
     recommendation = "approve"
-    if score >= 0.8:
+    if score >= 0.85:
         recommendation = "block"
-    elif score >= 0.5:
+    elif score >= 0.40:
         recommendation = "3ds2_challenge"
 
     response = FraudDetectionResponse(
@@ -379,8 +379,8 @@ async def evaluate_exemption(request: ExemptionRequest):
     # 3. Recurring/1-click with previous successful transaction
     # 4. Amount below exemption threshold
 
-    EXEMPTION_AMOUNT_THRESHOLD = 30.0
-    EXEMPTION_FRAUD_SCORE_THRESHOLD = 0.5
+    EXEMPTION_AMOUNT_THRESHOLD = 100.0
+    EXEMPTION_FRAUD_SCORE_THRESHOLD = 0.0013
     EXEMPTION_RECURRENT_AMOUNT_THRESHOLD = 1000.0
 
     score = request.fraudScore if request.fraudScore is not None else predict_fraud_score(request.amount, request.metadata)

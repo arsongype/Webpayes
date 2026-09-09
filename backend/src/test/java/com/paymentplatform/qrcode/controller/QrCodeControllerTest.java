@@ -44,6 +44,12 @@ class QrCodeControllerTest {
     @MockBean
     private com.paymentplatform.security.jwt.JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @MockBean
+    private com.paymentplatform.agent.service.AiAgentService aiAgentService;
+
+    @MockBean
+    private com.paymentplatform.idempotency.IdempotencyService idempotencyService;
+
     @Test
     void generateQr_returnsOk() throws Exception {
         QrGenerateRequest req = QrGenerateRequest.builder()

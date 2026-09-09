@@ -4,6 +4,7 @@ import com.paymentplatform.account.entity.Account;
 import com.paymentplatform.account.repository.AccountRepository;
 import com.paymentplatform.audit.entity.AuditEvent;
 import com.paymentplatform.audit.service.AuditService;
+import com.paymentplatform.auth.twofactor.TwoFactorService;
 import com.paymentplatform.common.exception.BusinessException;
 import com.paymentplatform.merchant.repository.MerchantApiKeyRepository;
 import com.paymentplatform.transaction.repository.TransactionRepository;
@@ -37,6 +38,7 @@ public class UserController {
     private final TransactionRepository transactionRepository;
     private final MerchantApiKeyRepository apiKeyRepository;
     private final AuditService auditService;
+    private final TwoFactorService twoFactorService;
 
     public UserController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
@@ -44,7 +46,8 @@ public class UserController {
                           AccountRepository accountRepository,
                           TransactionRepository transactionRepository,
                           MerchantApiKeyRepository apiKeyRepository,
-                          AuditService auditService) {
+                          AuditService auditService,
+                          TwoFactorService twoFactorService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.currentUserService = currentUserService;
@@ -52,6 +55,7 @@ public class UserController {
         this.transactionRepository = transactionRepository;
         this.apiKeyRepository = apiKeyRepository;
         this.auditService = auditService;
+        this.twoFactorService = twoFactorService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -119,10 +123,7 @@ public class UserController {
         long txCount = transactionRepository.countBySenderAccount_User_IdOrReceiverAccount_User_Id(currentUserId, currentUserId);
         long apiKeyCount = apiKeyRepository.countByMerchantProfile_User_Id(currentUserId);
 
-        int recoveryCodesCount = 0;
-        if (user.getTwoFactorRecoveryCodes() != null && !user.getTwoFactorRecoveryCodes().isBlank()) {
-            recoveryCodesCount = user.getTwoFactorRecoveryCodes().split(",").length;
-        }
+        int recoveryCodesCount = twoFactorService.decryptRecoveryCodes(user.getTwoFactorRecoveryCodes(), user.getEmail()).size();
 
         ProfileResponse profile = ProfileResponse.builder()
             .user(toDto(user))
@@ -267,10 +268,7 @@ public class UserController {
     }
 
     private UserDTO toDto(@NonNull User u) {
-        int recoveryCodesCount = 0;
-        if (u.getTwoFactorRecoveryCodes() != null && !u.getTwoFactorRecoveryCodes().isBlank()) {
-            recoveryCodesCount = u.getTwoFactorRecoveryCodes().split(",").length;
-        }
+        int recoveryCodesCount = twoFactorService.decryptRecoveryCodes(u.getTwoFactorRecoveryCodes(), u.getEmail()).size();
         return UserDTO.builder()
                 .id(u.getId())
                 .firstName(u.getFirstName())

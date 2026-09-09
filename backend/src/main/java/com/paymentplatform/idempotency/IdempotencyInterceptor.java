@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.io.IOException;
+
 @Slf4j
 @Component
 public class IdempotencyInterceptor implements HandlerInterceptor {
@@ -23,17 +25,27 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        return idempotencyService.getResponse(idempotencyKey)
-                .map(cached -> {
-                    try {
-                        response.setStatus(HttpServletResponse.SC_OK);
-                        response.setContentType("application/json");
-                        response.getWriter().write(cached);
-                    } catch (Exception e) {
-                        log.error("Failed to write cached idempotency response", e);
-                    }
-                    return false;
-                })
-                .orElse(true);
+        if (idempotencyService.isProcessing(idempotencyKey)) {
+            try {
+                response.sendError(HttpServletResponse.SC_CONFLICT,
+                        "{\"error\":\"Requête en cours de traitement pour cette clé d'idempotence\"}");
+            } catch (IOException e) {
+                log.error("Failed to send 409 conflict for idempotency key: {}", idempotencyKey, e);
+            }
+            return false;
+        }
+
+        boolean marked = idempotencyService.markProcessing(idempotencyKey);
+        if (!marked) {
+            try {
+                response.sendError(HttpServletResponse.SC_CONFLICT,
+                        "{\"error\":\"Requête en cours de traitement pour cette clé d'idempotence\"}");
+            } catch (IOException e) {
+                log.error("Failed to send 409 conflict for idempotency key: {}", idempotencyKey, e);
+            }
+            return false;
+        }
+
+        return true;
     }
 }

@@ -1,29 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useRealtimeBalance } from '../../hooks/useRealtimeBalance';
 import accountService from '../../services/accountService';
 import userService from '../../services/userService';
 import { DollarSign, Users, Wallet, ArrowUpRight, Download } from 'lucide-react';
 import { exportTableToPdf } from '../../utils/exportPdf';
+import { formatCurrency } from '../../utils/dateFormat';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [accounts, setAccounts] = useState<Array<{ id: string; accountNumber: string; balance: string; currency: string; userId: string }>>([]);
   const [usersCount, setUsersCount] = useState(0);
 
+  const load = async () => {
+    try {
+      const accs = await accountService.list();
+      setAccounts(accs);
+      const users = await userService.list();
+      setUsersCount(users.length);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        const accs = await accountService.list();
-        setAccounts(accs);
-        const users = await userService.list();
-        setUsersCount(users.length);
-      } catch {
-        // ignore
-      }
-    };
     load();
   }, []);
+
+  useRealtimeBalance(() => {
+    load();
+  });
 
   const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
@@ -43,7 +50,7 @@ const AdminDashboard = () => {
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="Utilisateurs" value={usersCount} icon={Users} accent="cyan" />
           <StatCard label="Comptes" value={accounts.length} icon={Wallet} accent="blue" />
-          <StatCard label="Solde total" value={`${totalBalance.toFixed(2)} €`} icon={DollarSign} accent="emerald" />
+          <StatCard label="Solde total" value={formatCurrency(totalBalance, 'MGA')} icon={DollarSign} accent="emerald" />
           <Link
             to="/dashboard"
             className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center transition hover:border-cyan-400 hover:bg-cyan-50/50 dark:border-white/10 dark:bg-slate-900 dark:hover:border-cyan-500/40"
@@ -64,7 +71,7 @@ const AdminDashboard = () => {
               onClick={() =>
                 exportTableToPdf({
                   title: 'Liste des comptes',
-                  subtitle: `Exporté le ${new Date().toLocaleString('fr-FR')}`,
+                  subtitle: `Exporté le ${new Date().toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}`,
                   columns: [
                     { key: 'accountNumber', label: 'Numéro' },
                     { key: 'currency', label: 'Devise' },
@@ -100,7 +107,7 @@ const AdminDashboard = () => {
                   <tr key={acc.id} className="transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/30">
                     <td className="whitespace-nowrap px-6 py-3.5 font-mono text-slate-700 dark:text-slate-200">{acc.accountNumber}</td>
                     <td className="whitespace-nowrap px-6 py-3.5 text-slate-700 dark:text-slate-200">{acc.currency}</td>
-                    <td className="whitespace-nowrap px-6 py-3.5 font-semibold tabular-nums text-slate-900 dark:text-white">{Number(acc.balance).toFixed(2)}</td>
+                    <td className="whitespace-nowrap px-6 py-3.5 font-semibold tabular-nums text-slate-900 dark:text-white">{formatCurrency(Number(acc.balance), acc.currency)}</td>
                     <td className="whitespace-nowrap px-6 py-3.5 text-slate-700 dark:text-slate-200">{acc.userId}</td>
                   </tr>
                 ))}

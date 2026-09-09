@@ -40,77 +40,141 @@ public class MobileMoneyPaymentExec implements PaymentExec {
 
     @Override
     public PaymentResponse execute(PaymentRequest request) {
-        String phone = request.getMobileMoneyPhone();
-        MobileMoneyOperator operator = request.getMobileMoneyOperator();
+        try {
+            String phone = request.getMobileMoneyPhone();
+            MobileMoneyOperator operator = request.getMobileMoneyOperator();
 
-        log.info("Initiating mobile money payment for phone: {}, operator: {}", phone,
-                operator != null ? operator.getDisplayName() : "UNKNOWN");
+            if (!currentUserService.isCurrentUserEnabled()) {
+                return PaymentResponse.builder()
+                        .paymentId(UUID.randomUUID())
+                        .status(PaymentStatus.FAILED)
+                        .transactionReference("MM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                        .externalTransactionId(null)
+                        .amount(request.getAmount())
+                        .currency(request.getCurrency())
+                        .paymentMethod(com.paymentplatform.payment.enums.PaymentMethodType.MOBILE_MONEY)
+                        .provider(null)
+                        .message("Votre compte n'est pas encore activé. Veuillez contacter l'administration.")
+                        .success(false)
+                        .token(null)
+                        .build();
+            }
 
-        String description = "Paiement Mobile Money - " + phone + " - " + request.getAmount() + " " + request.getCurrency();
+            log.info("Initiating mobile money payment for phone: {}, operator: {}", phone,
+                    operator != null ? operator.getDisplayName() : "UNKNOWN");
 
-        PaymentProvider provider = resolveProvider(operator);
+            String description = "Paiement Mobile Money - " + phone + " - " + request.getAmount() + " " + request.getCurrency();
 
-        GatewayChargeResult chargeResult;
-        if (provider == PaymentProvider.ORANGE_MONEY) {
-            chargeResult = orangeMoneyGateway.charge(phone, request.getAmount(), request.getCurrency(), description);
-        } else if (provider == PaymentProvider.MTN_MOBILE_MONEY) {
-            chargeResult = mtnMobileMoneyGateway.charge(phone, request.getAmount(), request.getCurrency(), description);
-        } else if (provider == PaymentProvider.MPESA) {
-            chargeResult = mpesaGateway.charge(phone, request.getAmount(), request.getCurrency(), description);
-        } else {
-            chargeResult = simulatePush(phone, operator);
-        }
+            PaymentProvider provider = resolveProvider(operator);
 
-        PaymentStatus status = chargeResult.success() ? PaymentStatus.PENDING : PaymentStatus.FAILED;
+            GatewayChargeResult chargeResult;
+            try {
+                if (provider == PaymentProvider.ORANGE_MONEY) {
+                    chargeResult = orangeMoneyGateway.charge(phone, request.getAmount(), request.getCurrency(), description);
+                } else if (provider == PaymentProvider.MTN_MOBILE_MONEY) {
+                    chargeResult = mtnMobileMoneyGateway.charge(phone, request.getAmount(), request.getCurrency(), description);
+                } else if (provider == PaymentProvider.MPESA) {
+                    chargeResult = mpesaGateway.charge(phone, request.getAmount(), request.getCurrency(), description);
+                } else {
+                    chargeResult = simulatePush(phone, operator);
+                }
+            } catch (Exception ex) {
+                log.error("Mobile money gateway charge failed", ex);
+                return PaymentResponse.builder()
+                        .paymentId(UUID.randomUUID())
+                        .status(PaymentStatus.FAILED)
+                        .transactionReference("MM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                        .externalTransactionId(null)
+                        .amount(request.getAmount())
+                        .currency(request.getCurrency())
+                        .paymentMethod(com.paymentplatform.payment.enums.PaymentMethodType.MOBILE_MONEY)
+                        .provider(provider)
+                        .message("Échec du traitement Mobile Money. Veuillez réessayer.")
+                        .success(false)
+                        .token(null)
+                        .build();
+            }
 
-        PaymentResponse response = PaymentResponse.builder()
-                .paymentId(UUID.randomUUID())
-                .status(status)
-                .transactionReference("MM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
-                .externalTransactionId(chargeResult.externalId())
-                .amount(request.getAmount())
-                .currency(request.getCurrency())
-                .paymentMethod(com.paymentplatform.payment.enums.PaymentMethodType.MOBILE_MONEY)
-                .provider(provider)
-                .message(chargeResult.message())
-                .success(chargeResult.success())
-                .token(null)
-                .build();
+            PaymentStatus status = chargeResult.success() ? PaymentStatus.PENDING : PaymentStatus.FAILED;
 
-        User user = currentUserService.getCurrentUser();
+            PaymentResponse response = PaymentResponse.builder()
+                    .paymentId(UUID.randomUUID())
+                    .status(status)
+                    .transactionReference("MM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                    .externalTransactionId(chargeResult.externalId())
+                    .amount(request.getAmount())
+                    .currency(request.getCurrency())
+                    .paymentMethod(com.paymentplatform.payment.enums.PaymentMethodType.MOBILE_MONEY)
+                    .provider(provider)
+                    .message(chargeResult.message())
+                    .success(chargeResult.success())
+                    .token(null)
+                    .build();
 
-        if (chargeResult.success()) {
-            UUID txnId = UUID.nameUUIDFromBytes(response.getTransactionReference().getBytes());
-            Account userAccount = accountRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new IllegalStateException("Account not found for user"));
-            walletService.deposit(currentUserService.getCurrentUserId(), currentUserService.isCurrentUserAdmin(),
-                    userAccount.getId(), new java.math.BigDecimal(request.getAmount().toString()),
-                    "Paiement Mobile Money - " + response.getTransactionReference());
-            ledgerService.saveEntries(List.of(
-                    LedgerEntry.builder()
-                            .transactionId(txnId)
-                            .accountId(userAccount.getId())
-                            .entryType(LedgerEntry.EntryType.CREDIT)
-                            .amount(new java.math.BigDecimal(request.getAmount().toString()))
+            User user = currentUserService.getCurrentUser();
+
+            if (chargeResult.success()) {
+                try {
+                    UUID txnId = UUID.nameUUIDFromBytes(response.getTransactionReference().getBytes());
+                    Account userAccount = accountRepository.findByUserId(user.getId())
+                            .orElseThrow(() -> new IllegalStateException("Account not found for user"));
+                    walletService.withdraw(currentUserService.getCurrentUserId(), currentUserService.isCurrentUserAdmin(),
+                            userAccount.getId(), new java.math.BigDecimal(request.getAmount().toString()),
+                            "Paiement Mobile Money - " + response.getTransactionReference());
+                    ledgerService.saveEntries(List.of(
+                            LedgerEntry.builder()
+                                    .transactionId(txnId)
+                                    .accountId(userAccount.getId())
+                                    .entryType(LedgerEntry.EntryType.DEBIT)
+                                    .amount(new java.math.BigDecimal(request.getAmount().toString()))
+                                    .currency(request.getCurrency())
+                                    .build()
+                    ));
+                } catch (Exception ex) {
+                    log.error("Wallet/ledger update failed after successful mobile money charge", ex);
+                    return PaymentResponse.builder()
+                            .paymentId(response.getPaymentId())
+                            .status(PaymentStatus.FAILED)
+                            .transactionReference(response.getTransactionReference())
+                            .externalTransactionId(chargeResult.externalId())
+                            .amount(request.getAmount())
                             .currency(request.getCurrency())
-                            .build(),
-                    LedgerEntry.builder()
-                            .transactionId(txnId)
-                            .accountId(userAccount.getId())
-                            .entryType(LedgerEntry.EntryType.DEBIT)
-                            .amount(new java.math.BigDecimal(request.getAmount().toString()))
-                            .currency(request.getCurrency())
-                            .build()
-            ));
+                            .paymentMethod(com.paymentplatform.payment.enums.PaymentMethodType.MOBILE_MONEY)
+                            .provider(provider)
+                            .message("Paiement accepté par l'opérateur, mais la mise à jour du compte a échoué. Contactez le support.")
+                            .success(false)
+                            .token(null)
+                            .build();
+                }
+            }
+
+            try {
+                String providerLabel = operator != null ? operator.getDisplayName() : "Mobile Money";
+                notificationService.sendPaymentNotification(
+                        user.getEmail(), user.getFirstName(), providerLabel,
+                        request.getAmount().toString(), request.getCurrency(),
+                        response.getMessage(), null);
+            } catch (Exception ex) {
+                log.warn("Notification failed for mobile money payment", ex);
+            }
+
+            return response;
+        } catch (Exception ex) {
+            log.error("Unhandled mobile money payment error", ex);
+            return PaymentResponse.builder()
+                    .paymentId(UUID.randomUUID())
+                    .status(PaymentStatus.FAILED)
+                    .transactionReference("MM-ERROR")
+                    .externalTransactionId(null)
+                    .amount(request != null ? request.getAmount() : 0)
+                    .currency(request != null ? request.getCurrency() : "MGA")
+                    .paymentMethod(com.paymentplatform.payment.enums.PaymentMethodType.MOBILE_MONEY)
+                    .provider(null)
+                    .message("Une erreur interne est survenue lors du paiement Mobile Money. Veuillez réessayer.")
+                    .success(false)
+                    .token(null)
+                    .build();
         }
-
-        String providerLabel = operator != null ? operator.getDisplayName() : "Mobile Money";
-        notificationService.sendPaymentNotification(
-                user.getEmail(), user.getFirstName(), providerLabel,
-                request.getAmount().toString(), request.getCurrency(),
-                response.getMessage(), null);
-
-        return response;
     }
 
     private GatewayChargeResult simulatePush(String phone, MobileMoneyOperator operator) {

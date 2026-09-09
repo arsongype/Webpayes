@@ -6,9 +6,11 @@ import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
 import accountService from '../../services/accountService';
 import walletService from '../../services/walletService';
 import { useToast } from '../../components/common/Toast/useToast';
+import { useRealtimeBalance } from '../../hooks/useRealtimeBalance';
 import BalanceChart from '../../components/charts/BalanceChart';
 import type { AccountDTO } from '../../types/account.types';
 import type { WalletTransactionDTO } from '../../types/wallet.types';
+import { formatDateTime } from '../../utils/dateFormat';
 
 const Dashboard = () => {
   const dispatch = useAppDispatch();
@@ -22,6 +24,17 @@ const Dashboard = () => {
   const updateUserRef = useRef(updateUser);
   // eslint-disable-next-line react-hooks/refs
   updateUserRef.current = updateUser;
+
+  useRealtimeBalance((newBalance: number, newCurrency: string) => {
+    setAccounts((prev) => {
+      if (prev.length === 0) return prev;
+      const updated = [...prev];
+      updated[0] = { ...updated[0], balance: String(newBalance), currency: newCurrency };
+      return updated;
+    });
+    dispatch(fetchStats());
+    dispatch(fetchTransactions({ page: 0, size: 5 }));
+  });
 
   useEffect(() => {
     dispatch(fetchStats());
@@ -94,7 +107,7 @@ const Dashboard = () => {
       <div className="mx-auto max-w-6xl space-y-5">
         {/* Hero header */}
         <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900/60 sm:p-8">
-          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-cyan-500/10 to-blue-500/10 blur-2xl" />
+          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-linear-to-br from-cyan-500/10 to-blue-500/10 blur-2xl" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-400">
@@ -108,7 +121,7 @@ const Dashboard = () => {
               </p>
             </div>
             {account && (
-              <div className="rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-blue-50 p-4 dark:border-cyan-500/20 dark:from-cyan-500/10 dark:to-blue-500/10">
+              <div className="rounded-2xl border border-cyan-200 bg-linear-to-br from-cyan-50 to-blue-50 p-4 dark:border-cyan-500/20 dark:from-cyan-500/10 dark:to-blue-500/10">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">
                   Solde disponible
                 </p>
@@ -158,7 +171,7 @@ const Dashboard = () => {
 
         {/* No account banner */}
         {accountChecked && accounts.length === 0 && (
-          <div className="overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/5">
+          <div className="overflow-hidden rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50 to-orange-50 dark:border-amber-500/30 dark:from-amber-500/10 dark:to-orange-500/5">
             <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
                 <AlertCircle className="h-6 w-6 text-amber-700 dark:text-amber-300" />
@@ -233,9 +246,7 @@ const Dashboard = () => {
                             {tx.type}
                           </p>
                           <p className="text-[10px] text-slate-500">
-                            {tx.createdAt
-                              ? new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
-                              : '—'}
+                            {tx.createdAt ? formatDateTime(tx.createdAt, { hour: '2-digit', minute: '2-digit' }) : '—'}
                           </p>
                         </div>
                         <p

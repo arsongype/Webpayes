@@ -41,6 +41,12 @@ class AuthControllerTest {
     @MockBean
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
+    @MockBean
+    private com.paymentplatform.agent.service.AiAgentService aiAgentService;
+
+    @MockBean
+    private com.paymentplatform.idempotency.IdempotencyService idempotencyService;
+
     @Test
     void register_returnsCreated() throws Exception {
         RegisterRequestDTO req = new RegisterRequestDTO(

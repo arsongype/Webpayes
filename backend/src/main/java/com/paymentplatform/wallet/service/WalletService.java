@@ -9,6 +9,7 @@ import com.paymentplatform.wallet.dto.WalletTransactionDTO;
 import com.paymentplatform.wallet.entity.WalletTransaction;
 import com.paymentplatform.wallet.repository.WalletTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class WalletService {
 
     private final AccountRepository accountRepository;
@@ -45,8 +47,10 @@ public class WalletService {
         }
 
         Account account = resolveAccount(accountId, currentUserId, isAdmin);
-        account.setBalance(account.getBalance().add(amount));
+        BigDecimal before = account.getBalance();
+        account.setBalance(before.add(amount));
         accountRepository.save(account);
+        log.info("WALLET deposit account={} before={} after={} amount={}", accountId, before, account.getBalance(), amount);
 
         WalletTransaction txn = WalletTransaction.builder()
                 .account(account)
@@ -65,12 +69,14 @@ public class WalletService {
         }
 
         Account account = resolveAccount(accountId, currentUserId, isAdmin);
-        if (account.getBalance().compareTo(amount) < 0) {
+        BigDecimal before = account.getBalance();
+        if (before.compareTo(amount) < 0) {
             throw new BusinessException("Solde insuffisant", HttpStatus.BAD_REQUEST);
         }
 
-        account.setBalance(account.getBalance().subtract(amount));
+        account.setBalance(before.subtract(amount));
         accountRepository.save(account);
+        log.info("WALLET withdraw account={} before={} after={} amount={}", accountId, before, account.getBalance(), amount);
 
         WalletTransaction txn = WalletTransaction.builder()
                 .account(account)

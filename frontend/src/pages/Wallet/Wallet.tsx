@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useRealtimeBalance } from '../../hooks/useRealtimeBalance';
 import walletService from '../../services/walletService';
 import accountService from '../../services/accountService';
 import type { WalletBalanceDTO, WalletTransactionDTO, WalletTransactionPayload } from '../../types/wallet.types';
 import type { AccountDTO } from '../../types/account.types';
+import { formatDateTime } from '../../utils/dateFormat';
 
 const Wallet = () => {
   const { user } = useAuth();
@@ -23,6 +25,21 @@ const Wallet = () => {
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [showCreateAccount, setShowCreateAccount] = useState(false);
 
+  useRealtimeBalance((newBalance: number, newCurrency: string) => {
+    if (balance && resolvedAccountId) {
+      setBalance((prev) => prev ? { ...prev, balance: String(newBalance) } : null);
+      setAccounts((prev) => {
+        const idx = prev.findIndex((a) => a.id === resolvedAccountId);
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = { ...copy[idx], balance: String(newBalance), currency: newCurrency };
+          return copy;
+        }
+        return prev;
+      });
+    }
+  });
+
   const accountDisplay = useMemo(() => {
     if (!balance) return 'Compte inconnu';
     const label = accounts.find((a) => a.id === balance.accountId)?.accountNumber ?? balance.accountId;
@@ -34,6 +51,16 @@ const Wallet = () => {
       .then(setAccounts)
       .catch(() => setError('Impossible de charger vos comptes.'))
       .finally(() => setLoadingAccounts(false));
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      accountService.list()
+        .then(setAccounts)
+        .catch(() => setError('Impossible de charger vos comptes.'));
+    };
+    window.addEventListener('accountsUpdated', refresh);
+    return () => window.removeEventListener('accountsUpdated', refresh);
   }, []);
 
   useEffect(() => {
@@ -316,7 +343,7 @@ const Wallet = () => {
                       <span className="text-slate-500 dark:text-slate-400">{txn.currency} {Number(txn.amount).toFixed(2)}</span>
                     </div>
                     <div className="mt-2 text-slate-500 dark:text-slate-400">{txn.description}</div>
-                    <div className="mt-3 text-xs text-slate-400 dark:text-slate-500">{txn.createdAt ? new Date(txn.createdAt).toLocaleString() : 'Date non disponible'}</div>
+                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">{txn.createdAt ? formatDateTime(txn.createdAt) : 'Date non disponible'}</div>
                   </div>
                 ))
               )}
@@ -327,10 +354,10 @@ const Wallet = () => {
 
       {showCreateAccount && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-4xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
-            <h3 className="mb-4 text-xl font-semibold text-white">Créer un compte</h3>
+          <div className="w-full max-w-md rounded-4xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-slate-900">
+            <h3 className="mb-4 text-xl font-semibold text-slate-900 dark:text-white">Créer un compte</h3>
             <form onSubmit={handleCreateAccount} className="space-y-4">
-              <p className="text-sm text-slate-300">
+              <p className="text-sm text-slate-500 dark:text-slate-300">
                 Un compte en MGA sera créé pour vous. Cette action est gratuite et instantanée.
               </p>
               <button
@@ -343,7 +370,7 @@ const Wallet = () => {
               <button
                 type="button"
                 onClick={() => setShowCreateAccount(false)}
-                className="w-full rounded-2xl bg-slate-800 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-100 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200 dark:border-white/10 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
                 Annuler
               </button>

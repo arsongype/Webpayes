@@ -42,6 +42,7 @@ public class AuditService {
     private final CurrentUserService currentUserService;
     private final ObjectMapper objectMapper;
     private final Tracer tracer;
+    private final WormStorageService wormStorageService;
 
     private static final long RETENTION_DAYS = 2555; // ~7 years per PCI-DSS
 
@@ -57,6 +58,7 @@ public class AuditService {
             event.setHashChain(computeHashChain(event, prevHash));
             event.setRetentionUntil(Instant.now().plus(RETENTION_DAYS, ChronoUnit.DAYS));
             repository.save(event);
+            wormStorageService.append(event, metadata);
         } catch (Exception e) {
             log.error("CRITICAL: Failed to persist audit event [type={}, action={}, outcome={}]: {}",
                 eventType, action, outcome, e.getMessage(), e);
@@ -72,7 +74,9 @@ public class AuditService {
         event.setPrevHash(prevHash);
         event.setHashChain(computeHashChain(event, prevHash));
         event.setRetentionUntil(Instant.now().plus(RETENTION_DAYS, ChronoUnit.DAYS));
-        return repository.save(event);
+        AuditEvent saved = repository.save(event);
+        wormStorageService.append(saved, metadata);
+        return saved;
     }
 
     public Page<AuditEvent> findAll(Pageable pageable) {

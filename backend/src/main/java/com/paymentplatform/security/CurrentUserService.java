@@ -40,6 +40,11 @@ public class CurrentUserService {
                 .orElseThrow(() -> new BusinessException("Utilisateur introuvable", HttpStatus.UNAUTHORIZED));
     }
 
+    public boolean isCurrentUserEnabled() {
+        User user = getCurrentUser();
+        return user.isEnabled();
+    }
+
     public String getCurrentUserEmail() {
         Authentication authentication = getAuthentication();
         Object principal = authentication.getPrincipal();

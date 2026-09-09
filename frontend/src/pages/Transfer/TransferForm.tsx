@@ -88,6 +88,7 @@ const TransferForm = () => {
         setSuccess(`Transfert effectué avec succès. Référence: ${response.payload.reference}`);
         reset();
         dispatch(fetchTransactions({ page: 0, size: 20 }));
+        window.dispatchEvent(new Event('accountsUpdated'));
         setTimeout(() => navigate('/transactions'), 2000);
       }
     } catch (err) {

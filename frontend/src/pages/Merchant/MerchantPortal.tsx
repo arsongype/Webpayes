@@ -37,6 +37,7 @@ import type { Transaction } from '../../types/transaction.types';
 import { useAuth } from '../../hooks/useAuth';
 import RequiredAsterisk from '../../components/common/RequiredAsterisk/RequiredAsterisk';
 import { useToast } from '../../components/common/Toast/useToast';
+import { formatDate, formatDateTime } from '../../utils/dateFormat';
 
 type Section = 'keys' | 'tx' | 'profile' | 'overview';
 
@@ -409,9 +410,9 @@ const MerchantPortal = () => {
         {/* Modal: Génération de clé */}
         <dialog
           id="generateModal"
-          className="rounded-3xl border border-slate-200 bg-white p-0 backdrop:bg-black/50 dark:border-white/10 dark:bg-slate-900"
+          className="rounded-3xl border border-slate-200 bg-white p-0 backdrop:bg-black/50 dark:border-white/10 dark:bg-slate-900 [&::backdrop]:flex [&::backdrop]:items-center [&::backdrop]:justify-center"
         >
-          <div className="w-full max-w-md p-6">
+          <div className="w-full max-w-md mx-auto p-6">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white">
                 <KeyRound className="h-5 w-5" />
@@ -505,7 +506,7 @@ const MerchantPortal = () => {
 
         {/* Modal: Clé générée */}
         {showGeneratedModal && generatedKey && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 text-center backdrop-blur-sm">
             <div className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-white/10 dark:bg-slate-900">
               <div className="relative bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-6 text-white">
                 <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
@@ -850,9 +851,9 @@ const KeysSection = ({
               <div className="mb-3 flex items-start justify-between">
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate text-base font-semibold">{key.name}</h3>
-                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                    Créée le {new Date(key.createdAt).toLocaleDateString('fr-FR')}
-                  </p>
+                   <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                     Créée le {formatDate(key.createdAt)}
+                   </p>
                 </div>
                 <span
                   className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -890,7 +891,7 @@ const KeysSection = ({
               {key.lastUsedAt && (
                 <p className="mb-3 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <Calendar className="h-3 w-3" />
-                  Dernière utilisation: {new Date(key.lastUsedAt).toLocaleDateString('fr-FR')}
+                  Dernière utilisation: {key.lastUsedAt ? formatDate(key.lastUsedAt) : '—'}
                 </p>
               )}
 
@@ -1026,14 +1027,9 @@ const TransactionsSection = ({
                     };
                     return (
                       <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                        <td className="whitespace-nowrap px-4 py-3 text-slate-900 dark:text-slate-100">
-                          {new Date(tx.createdAt).toLocaleString('fr-FR', {
-                            day: '2-digit',
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-slate-900 dark:text-slate-100">
+                        {formatDateTime(tx.createdAt, { hour: '2-digit', minute: '2-digit' })}
+                      </td>
                         <td className="whitespace-nowrap px-4 py-3 font-semibold">
                           {tx.amount} {tx.currency}
                         </td>

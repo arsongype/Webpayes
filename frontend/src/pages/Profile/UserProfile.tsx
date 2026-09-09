@@ -709,12 +709,12 @@ const UserProfile = () => {
 
       <Modal isOpen={showTwoFactorDisableModal} onClose={onCloseTwoFactorDisableModal} title="Désactiver la 2FA">
         <form className="space-y-4" onSubmit={handleDisableTwoFactor}>
-          <div className="flex rounded-2xl border border-slate-600 bg-slate-800 p-1">
+          <div className="flex rounded-2xl border border-slate-200 bg-slate-100 p-1 dark:border-white/10 dark:bg-slate-800">
             <button
               type="button"
               onClick={() => setTwoFactorDisableMode('code')}
               className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-                twoFactorDisableMode === 'code' ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white'
+                twoFactorDisableMode === 'code' ? 'bg-cyan-500 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
               }`}
             >
               Code d'authentification
@@ -723,16 +723,16 @@ const UserProfile = () => {
               type="button"
               onClick={() => setTwoFactorDisableMode('recovery')}
               className={`flex-1 rounded-xl py-2 text-sm font-semibold transition ${
-                twoFactorDisableMode === 'recovery' ? 'bg-cyan-500 text-white' : 'text-slate-300 hover:text-white'
+                twoFactorDisableMode === 'recovery' ? 'bg-cyan-500 text-white' : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
               }`}
             >
               Code de secours
             </button>
           </div>
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-slate-500 dark:text-slate-300">
             {twoFactorDisableMode === 'code'
               ? "Entrez le code généré par votre application d'authentification pour désactiver la 2FA."
-              : "Entrez un code de secours pour désactiver la 2FA. Les codes de secours sont à usage unique."}
+              : 'Entrez un de vos codes de secours pour désactiver la 2FA.'}
           </p>
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -744,12 +744,12 @@ const UserProfile = () => {
               value={twoFactorDisableCode}
               onChange={(e) => setTwoFactorDisableCode(e.target.value)}
               onBlur={() => setTwoFactorDisableCodeTouched(true)}
-              className="w-full rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3 text-white outline-none focus:border-cyan-500"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none focus:border-cyan-500 dark:border-white/10 dark:bg-slate-900 dark:text-white"
               placeholder="123456"
               required
             />
             {twoFactorDisableCodeTouched && !twoFactorDisableCode.trim() && (
-              <p className="mt-2 text-sm text-red-400">Ce champ est requis</p>
+              <p className="mt-2 text-sm text-red-500">Ce champ est requis</p>
             )}
           </div>
           <button
@@ -764,7 +764,7 @@ const UserProfile = () => {
 
       <Modal isOpen={showRecoveryCodesModal} onClose={onCloseRecoveryCodesModal} title="Codes de secours">
         <div className="space-y-4">
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-slate-500 dark:text-slate-300">
             Conservez ces codes en lieu sûr. Vous pouvez les utiliser pour vous connecter si vous perdez votre téléphone.
           </p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -773,11 +773,11 @@ const UserProfile = () => {
                 key={index}
                 type="button"
                 onClick={() => copy(code, `recovery-${index}`)}
-                className="flex items-center justify-between rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 font-mono text-sm text-white hover:border-cyan-500"
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm text-slate-700 hover:border-cyan-500 dark:border-white/10 dark:bg-slate-800 dark:text-white dark:hover:border-cyan-500"
                 title="Cliquer pour copier"
               >
                 <span>{code}</span>
-                {copiedField === `recovery-${index}` ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} className="text-slate-400" />}
+                {copiedField === `recovery-${index}` ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} className="text-slate-400 dark:text-slate-500" />}
               </button>
             ))}
           </div>
@@ -825,7 +825,7 @@ const Field = ({ id, label, icon: Icon, value, onChange, placeholder, type = 'te
       {label}
     </label>
     <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80">
-      <Icon size={18} className="text-slate-400" aria-hidden="true" />
+      <Icon size={18} className="text-slate-500 dark:text-slate-400" aria-hidden="true" />
       <input
         id={id}
         type={type}
@@ -1124,7 +1124,7 @@ const AccountTab = (p: AccountTabProps) => {
                 <button
                   type="button"
                   onClick={p.onToggleAccountNumber}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300"
                   aria-label={p.showAccountNumber ? 'Masquer' : 'Afficher'}
                 >
                   {p.showAccountNumber ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -1132,7 +1132,7 @@ const AccountTab = (p: AccountTabProps) => {
                 <button
                   type="button"
                   onClick={() => p.onCopy(account.accountNumber ?? '', 'accountNumber')}
-                  className="text-slate-400 hover:text-cyan-500"
+                  className="text-slate-500 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400"
                   aria-label="Copier le numéro de compte"
                 >
                   {p.copiedField === 'accountNumber' ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
@@ -1283,7 +1283,7 @@ const PreferencesTab = (p: PreferencesTabProps) => {
               Langue de l'interface
             </label>
             <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80">
-              <Globe size={18} className="text-slate-400" aria-hidden="true" />
+              <Globe size={18} className="text-slate-500 dark:text-slate-400" aria-hidden="true" />
               <select
                 id="language"
                 value={p.language}
@@ -1303,7 +1303,7 @@ const PreferencesTab = (p: PreferencesTabProps) => {
               Fuseau horaire
             </label>
             <div className="flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-4 py-3 dark:border-white/10 dark:bg-slate-800/80">
-              <Clock size={18} className="text-slate-400" aria-hidden="true" />
+              <Clock size={18} className="text-slate-500 dark:text-slate-400" aria-hidden="true" />
               <select
                 id="timezone"
                 value={p.timezone}
@@ -1531,21 +1531,21 @@ const ChangePasswordModal = memo(({
     <Modal isOpen={isOpen} onClose={onClose} title="Changer le mot de passe">
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-300">Mot de passe actuel</label>
-          <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
-            <Lock size={18} className="text-slate-400" aria-hidden="true" />
+          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Mot de passe actuel</label>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-800">
+            <Lock size={18} className="text-slate-400 dark:text-slate-500" aria-hidden="true" />
             <input
               type={showCurrentPassword ? 'text' : 'password'}
               value={currentPassword}
               onChange={(e) => onCurrentPasswordChange(e.target.value)}
-              className="w-full bg-transparent text-white outline-none"
+              className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
               placeholder="••••••••"
               autoComplete="current-password"
             />
             <button
               type="button"
               onClick={onToggleCurrentPassword}
-              className="text-slate-400 hover:text-slate-200"
+              className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
               aria-label={showCurrentPassword ? 'Masquer' : 'Afficher'}
             >
               {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -1553,21 +1553,21 @@ const ChangePasswordModal = memo(({
           </div>
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-300">Nouveau mot de passe</label>
-          <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
-            <KeyRound size={18} className="text-slate-400" aria-hidden="true" />
+          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Nouveau mot de passe</label>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-800">
+            <KeyRound size={18} className="text-slate-400 dark:text-slate-500" aria-hidden="true" />
             <input
               type={showNewPassword ? 'text' : 'password'}
               value={newPassword}
               onChange={(e) => onNewPasswordChange(e.target.value)}
-              className="w-full bg-transparent text-white outline-none"
+              className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
               placeholder="••••••••"
               autoComplete="new-password"
             />
             <button
               type="button"
               onClick={onToggleNewPassword}
-              className="text-slate-400 hover:text-slate-200"
+              className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
               aria-label={showNewPassword ? 'Masquer' : 'Afficher'}
             >
               {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -1591,14 +1591,14 @@ const ChangePasswordModal = memo(({
           )}
         </div>
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-300">Confirmer le nouveau mot de passe</label>
-          <div className="flex items-center gap-2 rounded-2xl border border-slate-600 bg-slate-800 px-4 py-3">
-            <Lock size={18} className="text-slate-400" aria-hidden="true" />
+          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">Confirmer le nouveau mot de passe</label>
+          <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-800">
+            <Lock size={18} className="text-slate-500 dark:text-slate-400" aria-hidden="true" />
             <input
               type={showNewPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => onConfirmPasswordChange(e.target.value)}
-              className="w-full bg-transparent text-white outline-none"
+              className="w-full bg-transparent text-slate-900 outline-none dark:text-white"
               placeholder="••••••••"
               autoComplete="new-password"
             />

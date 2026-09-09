@@ -4,6 +4,8 @@ import { useTheme } from '../../context/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../context/useNotification';
 import { Sun, Moon, Menu, X, Bell, CheckCheck, Search } from 'lucide-react';
+import newLogo from '../../assets/new-logo-isalosys-610x278.png';
+import { formatDateTime } from '../../utils/dateFormat';
 
 export const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -42,9 +44,7 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to={isAuthenticated ? '/payment' : '/'} className="flex items-center gap-2">
-            <div className="text-2xl font-bold bg-linear-to-r from-cyan-500 to-blue-600 bg-clip-text text-transparent">
-              WebPaysh
-            </div>
+            <img src={newLogo} alt="WebPaysh" className="h-8 w-auto object-contain" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -105,8 +105,8 @@ export const Navbar = () => {
                           <p className="font-medium text-slate-900 dark:text-white">{n.subject}</p>
                           <p className="text-slate-500 line-clamp-2 dark:text-slate-400">{n.body}</p>
                           {n.createdAt && (
-                            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                              {new Date(n.createdAt).toLocaleString()}
+                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                              {formatDateTime(n.createdAt)}
                             </p>
                           )}
                         </div>

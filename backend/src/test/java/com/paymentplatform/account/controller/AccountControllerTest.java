@@ -51,6 +51,12 @@ class AccountControllerTest {
     @MockBean
     private com.paymentplatform.security.jwt.JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @MockBean
+    private com.paymentplatform.agent.service.AiAgentService aiAgentService;
+
+    @MockBean
+    private com.paymentplatform.idempotency.IdempotencyService idempotencyService;
+
     @Test
     void listAccounts_returnsOk() throws Exception {
         when(currentUserService.getCurrentUserId()).thenReturn(UUID.randomUUID());

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -162,5 +163,10 @@ public class TransactionController {
         result.put("from", from.toString());
         result.put("to", to.toString());
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/stream/balance")
+    public SseEmitter streamBalance() {
+        return transactionService.streamBalance();
     }
 }
